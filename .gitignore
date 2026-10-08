@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.env
+*.log
+coverage/
+.nx/
+.DS_Store
+
+# React Native
+android/app/build/
+android/.gradle/
+ios/Pods/
+ios/build/
+*.apk
+*.ipa
