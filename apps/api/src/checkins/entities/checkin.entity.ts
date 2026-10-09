@@ -1,8 +1,16 @@
 
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 import { Habit } from '../../habits/entities/habit.entity';
 
 @Entity('checkins')
+@Unique(['habitId', 'date'])
 export class Checkin {
   @PrimaryGeneratedColumn()
   id: number;

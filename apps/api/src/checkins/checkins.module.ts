@@ -3,9 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CheckinsController } from './checkins.controller';
 import { CheckinsService } from './checkins.service';
 import { Checkin } from './entities/checkin.entity';
+import { Habit } from '../habits/entities/habit.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Checkin])],
+  imports: [TypeOrmModule.forFeature([Checkin, Habit])],
   controllers: [CheckinsController],
   providers: [CheckinsService],
 })

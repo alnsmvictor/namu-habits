@@ -1,5 +1,12 @@
 
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn} from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Checkin } from '../../checkins/entities/checkin.entity';
 
 @Entity('habits')
 export class Habit {
@@ -23,4 +30,7 @@ export class Habit {
 
   @CreateDateColumn({ name: 'created_at', nullable: true })
   createdAt: Date;
+
+  @OneToMany(() => Checkin, (checkin) => checkin.habit)
+  checkins: Checkin[];
 }

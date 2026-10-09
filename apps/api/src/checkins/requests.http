@@ -1,0 +1,22 @@
+@baseUrl = http://localhost:3001
+
+GET {{baseUrl}}/habits/3/checkins
+
+###
+
+POST {{baseUrl}}/habits/2/checkins
+Content-Type: application/json
+
+{
+  "date": "2026-10-09",
+  "notes": "Feito pela manhã"
+}
+
+###
+
+POST {{baseUrl}}/habits/999/checkins
+Content-Type: application/json
+
+{
+  "date": "2026-10-09"
+}
