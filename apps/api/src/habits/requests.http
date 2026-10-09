@@ -1,0 +1,19 @@
+@baseUrl = http://localhost:3001
+
+GET {{baseUrl}}/habits
+
+###
+
+GET {{baseUrl}}/habits/2
+
+###
+
+POST {{baseUrl}}/habits
+Content-Type: application/json
+
+{
+  "title": "Beber água",
+  "description": "Beber dois litros por dia",
+  "frequency": "diário",
+  "category": "saúde"
+}

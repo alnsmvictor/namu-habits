@@ -4,6 +4,7 @@ build/
 .env
 *.log
 coverage/
+*.tsbuildinfo
 .nx/
 .DS_Store
 

@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { HabitsService } from './habits.service';
 import { Body, Post } from '@nestjs/common';
 import { CreateHabitDto } from './dto/create-habit.dto';
@@ -10,6 +10,11 @@ export class HabitsController {
   @Get()
   findAll() {
     return this.habitsService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.habitsService.findOne(id);
   }
 
   @Post()

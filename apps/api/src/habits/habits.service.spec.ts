@@ -9,6 +9,7 @@ describe('HabitsService', () => {
 
   const repositoryMock = {
     find: jest.fn(),
+    findOneBy: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
   };
@@ -60,5 +61,22 @@ describe('HabitsService', () => {
     expect(repositoryMock.create).toHaveBeenCalledWith(dto);
     expect(repositoryMock.save).toHaveBeenCalledWith(dto);
     expect(result).toEqual(habit);
+  });
+
+  it('deve buscar um hábito pelo id', async () => {
+    const habit = { id: 1, title: 'Caminhada' };
+
+    repositoryMock.findOneBy.mockResolvedValue(habit);
+
+    const result = await service.findOne(1);
+
+    expect(repositoryMock.findOneBy).toHaveBeenCalledWith({ id: 1 });
+    expect(result).toEqual(habit);
+  });
+
+  it('deve retornar erro quando o hábito não existe', async () => {
+    repositoryMock.findOneBy.mockResolvedValue(null);
+
+    await expect(service.findOne(999)).rejects.toThrow('Hábito não encontrado');
   });
 });
