@@ -4,7 +4,7 @@ GET {{baseUrl}}/habits
 
 ###
 
-GET {{baseUrl}}/habits/2
+GET {{baseUrl}}/habits/1
 
 ###
 
@@ -17,3 +17,17 @@ Content-Type: application/json
   "frequency": "diário",
   "category": "saúde"
 }
+
+###
+
+PATCH {{baseUrl}}/habits/1
+Content-Type: application/json
+
+{
+  "title": "Meditação matinal",
+  "description": "Meditar por 20 minutos todas as manhãs"
+}
+
+###
+
+DELETE {{baseUrl}}/habits/1

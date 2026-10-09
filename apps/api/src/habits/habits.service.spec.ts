@@ -10,6 +10,7 @@ describe('HabitsService', () => {
   const repositoryMock = {
     find: jest.fn(),
     findOneBy: jest.fn(),
+    delete: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
   };
@@ -78,5 +79,45 @@ describe('HabitsService', () => {
     repositoryMock.findOneBy.mockResolvedValue(null);
 
     await expect(service.findOne(999)).rejects.toThrow('Hábito não encontrado');
+  });
+
+  it('deve atualizar um hábito', async () => {
+    const habit = { id: 1, title: 'Caminhada', category: 'saúde' };
+    const dto = { title: 'Caminhada de manhã' };
+
+    repositoryMock.findOneBy.mockResolvedValue(habit);
+    repositoryMock.save.mockResolvedValue({ ...habit, ...dto });
+
+    const result = await service.update(1, dto);
+
+    expect(repositoryMock.save).toHaveBeenCalledWith({ ...habit, ...dto });
+    expect(result).toEqual({ ...habit, ...dto });
+  });
+
+  it('deve retornar erro ao atualizar um hábito inexistente', async () => {
+    repositoryMock.findOneBy.mockResolvedValue(null);
+
+    await expect(service.update(999, { title: 'Novo título' })).rejects.toThrow(
+      'Hábito não encontrado',
+    );
+  });
+
+  it('deve excluir um hábito', async () => {
+    const habit = { id: 1, title: 'Caminhada' };
+
+    repositoryMock.findOneBy.mockResolvedValue(habit);
+    repositoryMock.delete.mockResolvedValue({ affected: 1 });
+
+    const result = await service.remove(1);
+
+    expect(repositoryMock.delete).toHaveBeenCalledWith(1);
+    expect(result).toEqual({ message: 'Hábito excluído com sucesso' });
+  });
+
+  it('deve retornar erro ao excluir um hábito inexistente', async () => {
+    repositoryMock.findOneBy.mockResolvedValue(null);
+
+    await expect(service.remove(999)).rejects.toThrow('Hábito não encontrado');
+    expect(repositoryMock.delete).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,8 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { HabitsService } from './habits.service';
-import { Body, Post } from '@nestjs/common';
+import { Body, Delete, Patch, Post } from '@nestjs/common';
 import { CreateHabitDto } from './dto/create-habit.dto';
+import { UpdateHabitDto } from './dto/update-habit.dto';
 
 @Controller('habits')
 export class HabitsController {
@@ -20,5 +21,18 @@ export class HabitsController {
   @Post()
   create(@Body() dto: CreateHabitDto) {
     return this.habitsService.create(dto);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateHabitDto,
+  ) {
+    return this.habitsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.habitsService.remove(id);
   }
 }
