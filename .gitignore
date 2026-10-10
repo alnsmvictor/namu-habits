@@ -1,17 +1,31 @@
+# Dependencies
 node_modules/
+
+# Build
 dist/
 build/
-.env
-*.log
 coverage/
 *.tsbuildinfo
 .nx/
+
+.env
+.env.*
+!.env.example
+
+*.log
+
 .DS_Store
 
-# React Native
 android/app/build/
+android/build/
 android/.gradle/
+android/local.properties
+android/.cxx/
 ios/Pods/
 ios/build/
 *.apk
 *.ipa
+
+apps/mobile/.bundle/
+
+apps/mobile-backup-*/
