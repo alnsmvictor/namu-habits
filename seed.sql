@@ -20,6 +20,14 @@ CREATE TABLE IF NOT EXISTS checkins (
   FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Hábitos
 INSERT INTO habits (title, description, frequency, category) VALUES
 ('Meditação Matinal', 'Meditar por 10 minutos ao acordar.', 'diário', 'mental'),

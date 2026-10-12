@@ -16,6 +16,8 @@ import { Habit, HabitPeriod } from '../types/habit';
 
 type DashboardScreenProps = {
   habits: Habit[];
+  userName: string;
+  onLogout: () => void;
   onCreateHabit: () => void;
   onOpenHabits: () => void;
   onToggleHabit: (id: number) => void;
@@ -46,6 +48,8 @@ const navigationItems = [
 
 function DashboardScreen({
   habits,
+  userName,
+  onLogout,
   onCreateHabit,
   onOpenHabits,
   onToggleHabit,
@@ -59,6 +63,9 @@ function DashboardScreen({
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.header}>
+        <Pressable style={styles.logoutButton} onPress={onLogout}>
+          <MaterialIcons name="logout" size={22} color="#407168" />
+        </Pressable>
         <Image
           source={require('../assets/namu-logo.png')}
           style={styles.logo}
@@ -73,7 +80,7 @@ function DashboardScreen({
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.greeting}>Bem vindo, Victor</Text>
+        <Text style={styles.greeting}>Bem vindo, {userName}</Text>
 
         <View style={styles.weekCard}>
           {weekDays.map(day => (
@@ -199,10 +206,18 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 18,
     shadowColor: '#000000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  logoutButton: {
+    position: 'absolute',
+    left: 16,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logo: { width: 44, height: 44, resizeMode: 'contain' },
   profileButton: {

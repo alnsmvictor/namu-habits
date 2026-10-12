@@ -24,10 +24,7 @@ export class HabitsController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateHabitDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateHabitDto) {
     return this.habitsService.update(id, dto);
   }
 

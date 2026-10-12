@@ -48,8 +48,9 @@ export class DashboardService {
 
       return (
         total +
-        [...dates].filter((date) => date >= weekStart && weekDates.includes(date))
-          .length
+        [...dates].filter(
+          (date) => date >= weekStart && weekDates.includes(date),
+        ).length
       );
     }, 0);
 

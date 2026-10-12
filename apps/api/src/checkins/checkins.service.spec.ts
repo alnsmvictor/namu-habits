@@ -46,25 +46,28 @@ describe('CheckinsService', () => {
 
     const result = await service.create(1, dto);
 
-    expect(checkinsRepository.create).toHaveBeenCalledWith({ habitId: 1, ...dto });
+    expect(checkinsRepository.create).toHaveBeenCalledWith({
+      habitId: 1,
+      ...dto,
+    });
     expect(result).toEqual(checkin);
   });
 
   it('deve retornar 404 para hábito inexistente', async () => {
     habitsRepository.findOneBy.mockResolvedValue(null);
 
-    await expect(service.create(999, { date: '2026-10-09' })).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.create(999, { date: '2026-10-09' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('deve retornar 409 para check-in duplicado', async () => {
     habitsRepository.findOneBy.mockResolvedValue({ id: 1 });
     checkinsRepository.findOneBy.mockResolvedValue({ id: 1 });
 
-    await expect(service.create(1, { date: '2026-10-09' })).rejects.toBeInstanceOf(
-      ConflictException,
-    );
+    await expect(
+      service.create(1, { date: '2026-10-09' }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('deve consultar os check-ins de um hábito', async () => {
