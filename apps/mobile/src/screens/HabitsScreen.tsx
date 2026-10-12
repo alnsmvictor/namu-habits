@@ -30,6 +30,9 @@ function HabitsScreen({ habits, onBack, onOpenHabit }: Props) {
       </View>
       <ScrollView
         contentContainerStyle={styles.content}
+        overScrollMode="never"
+        bounces={false}
+        alwaysBounceVertical={false}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.overline}>{'TODOS OS H\u00c1BITOS'}</Text>
@@ -39,7 +42,9 @@ function HabitsScreen({ habits, onBack, onOpenHabit }: Props) {
         >{`${habits.length} h\u00e1bitos cadastrados`}</Text>
         <View style={styles.list}>
           {habits.length === 0 ? (
-            <Text style={styles.emptyText}>Nenhum hábito cadastrado ainda.</Text>
+            <Text style={styles.emptyText}>
+              Nenhum hábito cadastrado ainda.
+            </Text>
           ) : (
             habits.map(habit => (
               <HabitCard

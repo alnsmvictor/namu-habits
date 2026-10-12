@@ -1,6 +1,7 @@
 import {
   CreateHabitData,
   DashboardData,
+  HabitCheckin,
   UserHabit,
 } from '../types/habit';
 import { API_URL } from './auth';
@@ -79,16 +80,8 @@ export async function updateHabit(
   return data;
 }
 
-function getToday() {
-  const date = new Date();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return date.getFullYear() + '-' + month + '-' + day;
-}
-
-export async function getTodayCheckins(userId: number, habits: UserHabit[]) {
-  const checks = await Promise.all(
+export async function getCheckins(userId: number, habits: UserHabit[]) {
+  const checkins = await Promise.all(
     habits.map(async habit => {
       const response = await fetch(
         API_URL + '/habits/' + habit.id + '/checkins',
@@ -96,28 +89,21 @@ export async function getTodayCheckins(userId: number, habits: UserHabit[]) {
       );
 
       if (!response.ok) {
-        return false;
+        return [];
       }
 
-      const checkins = await response.json();
-      return checkins.find(
-        (checkin: { id: number; date: string }) => checkin.date === getToday(),
-      );
+      return response.json() as Promise<HabitCheckin[]>;
     }),
   );
 
-  return habits.reduce<Record<number, number>>((todayCheckins, habit, index) => {
-    const checkin = checks[index] as { id: number } | undefined;
-
-    if (checkin) {
-      todayCheckins[habit.id] = checkin.id;
-    }
-
-    return todayCheckins;
-  }, {});
+  return checkins.flat();
 }
 
-export async function createTodayCheckin(userId: number, habitId: number) {
+export async function createCheckin(
+  userId: number,
+  habitId: number,
+  date: string,
+): Promise<HabitCheckin> {
   const response = await fetch(
     API_URL + '/habits/' + habitId + '/checkins',
     {
@@ -126,7 +112,7 @@ export async function createTodayCheckin(userId: number, habitId: number) {
         'Content-Type': 'application/json',
         'x-user-id': String(userId),
       },
-      body: JSON.stringify({ date: getToday() }),
+      body: JSON.stringify({ date }),
     },
   );
 
@@ -136,10 +122,10 @@ export async function createTodayCheckin(userId: number, habitId: number) {
     throw new Error(data.message || 'Não foi possível concluir o hábito');
   }
 
-  return data as { id: number };
+  return data as HabitCheckin;
 }
 
-export async function removeTodayCheckin(
+export async function removeCheckin(
   userId: number,
   habitId: number,
   checkinId: number,
@@ -156,5 +142,18 @@ export async function removeTodayCheckin(
 
   if (!response.ok) {
     throw new Error(data.message || 'Não foi possível desmarcar o hábito');
+  }
+}
+
+export async function deleteHabit(userId: number, habitId: number) {
+  const response = await fetch(API_URL + '/habits/' + habitId, {
+    method: 'DELETE',
+    headers: { 'x-user-id': String(userId) },
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Não foi possível excluir o hábito');
   }
 }

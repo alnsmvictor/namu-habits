@@ -48,6 +48,7 @@ describe('HabitsService', () => {
     const dto = {
       title: 'Ler 20 páginas',
       frequency: 'diário',
+      weekDays: [0, 1, 2, 3, 4, 5, 6],
       category: 'mental',
     };
 

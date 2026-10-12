@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS habits (
   title VARCHAR(255) NOT NULL,
   description TEXT,
   period ENUM('MANHA', 'TARDE', 'NOITE') NOT NULL DEFAULT 'MANHA',
+  week_days JSON NOT NULL DEFAULT (JSON_ARRAY(0, 1, 2, 3, 4, 5, 6)),
   frequency ENUM('diário', 'semanal') NOT NULL,
   category ENUM('saúde', 'exercício', 'alimentação', 'mental') NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

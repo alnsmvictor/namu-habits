@@ -27,6 +27,9 @@ export class Habit {
   @Column({ type: 'enum', enum: ['MANHA', 'TARDE', 'NOITE'] })
   period: string;
 
+  @Column({ name: 'week_days', type: 'json' })
+  weekDays: number[];
+
   @Column({ type: 'enum', enum: ['diário', 'semanal', 'mensal'] })
   frequency: string;
 

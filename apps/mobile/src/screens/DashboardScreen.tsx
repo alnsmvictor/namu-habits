@@ -12,7 +12,7 @@ import { MaterialIcons } from '@react-native-vector-icons/material-icons/static'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HabitCard from '../components/HabitCard';
 import { fontFamily, fontSize } from '../styles/typography';
-import { HabitPeriod, UserHabit } from '../types/habit';
+import { HabitCheckin, HabitPeriod, UserHabit } from '../types/habit';
 
 type DashboardScreenProps = {
   habits: UserHabit[];
@@ -20,14 +20,10 @@ type DashboardScreenProps = {
   onLogout: () => void;
   onCreateHabit: () => void;
   onOpenHabits: () => void;
-  completedHabitIds: number[];
+  checkins: HabitCheckin[];
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
   onCompleteHabit: (habitId: number) => void;
-  weeklyCompletionPercentage: number;
-  weekDays: {
-    label: string;
-    completed: boolean;
-    isToday: boolean;
-  }[];
 };
 
 const periods: { key: HabitPeriod; label: string }[] = [
@@ -43,16 +39,32 @@ const navigationItems = [
   { label: 'Jornada', icon: 'emoji-events' },
 ] as const;
 
-function getCurrentDate() {
-  const date = new Intl.DateTimeFormat('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
-    .format(new Date())
-    .replace('-', ' ');
+function getDateKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return date.getFullYear() + '-' + month + '-' + day;
+}
 
-  return date.charAt(0).toUpperCase() + date.slice(1);
+function getWeekDays() {
+  const labels = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+  const today = new Date();
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - 6 + index);
+    const dateKey = getDateKey(date);
+
+    return {
+      label: labels[date.getDay()],
+      date: dateKey,
+      isToday: dateKey === getDateKey(today),
+    };
+  });
+}
+
+function getWeekDayIndex(date: string) {
+  const day = new Date(date + 'T12:00:00').getDay();
+  return day === 0 ? 6 : day - 1;
 }
 
 function DashboardScreen({
@@ -61,13 +73,29 @@ function DashboardScreen({
   onLogout,
   onCreateHabit,
   onOpenHabits,
-  completedHabitIds,
+  checkins,
+  selectedDate,
+  onSelectDate,
   onCompleteHabit,
-  weeklyCompletionPercentage,
-  weekDays,
 }: DashboardScreenProps) {
   const [selectedTab, setSelectedTab] = useState('Geral');
-  const currentDate = getCurrentDate();
+  const currentDate = new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+    .format(new Date(selectedDate + 'T12:00:00'))
+    .replace('-', ' ');
+  const weekDays = getWeekDays();
+  const habitsForSelectedDay = habits.filter(habit =>
+    habit.weekDays.includes(getWeekDayIndex(selectedDate)),
+  );
+  const completedHabitIds = checkins
+    .filter(checkin => checkin.date === selectedDate)
+    .map(checkin => checkin.habitId);
+  const dailyPercentage = habitsForSelectedDay.length
+    ? Math.round((completedHabitIds.length / habitsForSelectedDay.length) * 100)
+    : 0;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -90,49 +118,56 @@ function DashboardScreen({
         style={styles.scroll}
         contentContainerStyle={styles.content}
         overScrollMode="never"
+        bounces={false}
+        alwaysBounceVertical={false}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.currentDate}>{currentDate}</Text>
+        <Text style={styles.currentDate}>
+          {currentDate.charAt(0).toUpperCase() + currentDate.slice(1)}
+        </Text>
         <Text style={styles.greeting}>Bem vindo, {userName}</Text>
 
         <View style={styles.weekCard}>
-          {weekDays.map((day, index) => (
-            <View
-              key={index}
-              style={[styles.dayItem, day.isToday && styles.dayItemToday]}
+          {weekDays.map(day => (
+            <Pressable
+              key={day.date}
+              onPress={() => onSelectDate(day.date)}
+              style={[
+                styles.dayItem,
+                selectedDate === day.date && styles.dayItemToday,
+              ]}
             >
               <Text
-                style={[styles.dayText, day.isToday && styles.dayTextToday]}
+                style={[
+                  styles.dayText,
+                  selectedDate === day.date && styles.dayTextToday,
+                ]}
               >
                 {day.label}
               </Text>
-              {day.completed ? (
+              {checkins.some(checkin => checkin.date === day.date) ? (
                 <View style={styles.dayCompleted}>
                   <MaterialIcons name="check" size={13} color="#42cdb0" />
                 </View>
               ) : (
                 <View style={styles.dayDot} />
               )}
-            </View>
+            </Pressable>
           ))}
         </View>
 
         <View style={styles.progressHeader}>
-          <Text style={styles.progressText}>
-            {weeklyCompletionPercentage}% Concluído
-          </Text>
+          <Text style={styles.progressText}>{dailyPercentage}% Concluído</Text>
           <View style={styles.counterBadge}>
             <Text style={styles.counterText}>
-              {completedHabitIds.length} de {habits.length} Hábitos
+              {completedHabitIds.length} de {habitsForSelectedDay.length}{' '}
+              Hábitos
             </Text>
           </View>
         </View>
         <View style={styles.progressTrack}>
           <View
-            style={[
-              styles.progressFill,
-              { width: weeklyCompletionPercentage + '%' },
-            ]}
+            style={[styles.progressFill, { width: dailyPercentage + '%' }]}
           />
         </View>
 
@@ -142,7 +177,7 @@ function DashboardScreen({
           </Text>
         ) : (
           periods.map(period => {
-            const periodHabits = habits.filter(
+            const periodHabits = habitsForSelectedDay.filter(
               habit => habit.period === period.key,
             );
 

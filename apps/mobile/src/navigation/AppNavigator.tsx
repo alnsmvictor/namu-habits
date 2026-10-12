@@ -10,68 +10,50 @@ import HabitsScreen from '../screens/HabitsScreen';
 import { AuthUser } from '../services/auth';
 import {
   createHabit,
-  createTodayCheckin,
-  getDashboard,
+  createCheckin,
+  deleteHabit,
+  getCheckins,
   getHabits,
-  getTodayCheckins,
-  removeTodayCheckin,
+  removeCheckin,
   updateHabit,
 } from '../services/habits';
 import {
   CreateHabitData,
-  DashboardData,
-  Habit,
+  HabitCheckin,
+  HabitPeriod,
   UserHabit,
 } from '../types/habit';
 
 const Stack = createNativeStackNavigator();
 
+function getDateKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return date.getFullYear() + '-' + month + '-' + day;
+}
+
 function AppNavigator() {
   const [habits, setHabits] = useState<UserHabit[]>([]);
-  const [todayCheckins, setTodayCheckins] = useState<Record<number, number>>(
-    {},
-  );
-  const [dashboard, setDashboard] = useState<DashboardData>({
-    weeklyCompletionPercentage: 0,
-    weekDays: [],
-  });
+  const [checkins, setCheckins] = useState<HabitCheckin[]>([]);
   const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState(getDateKey(new Date()));
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     if (!user) {
       setHabits([]);
-      setTodayCheckins({});
-      setDashboard({ weeklyCompletionPercentage: 0, weekDays: [] });
+      setCheckins([]);
       return;
     }
 
     getHabits(user.id)
       .then(async loadedHabits => {
         setHabits(loadedHabits);
-        const checkins = await getTodayCheckins(user.id, loadedHabits);
-        setTodayCheckins(checkins);
+        const loadedCheckins = await getCheckins(user.id, loadedHabits);
+        setCheckins(loadedCheckins);
       })
       .catch(error => Alert.alert('Erro', error.message));
-
-    getDashboard(user.id)
-      .then(setDashboard)
-      .catch(error => Alert.alert('Erro', error.message));
   }, [user]);
-
-  async function refreshDashboard() {
-    if (!user) {
-      return;
-    }
-
-    try {
-      const dashboardData = await getDashboard(user.id);
-      setDashboard(dashboardData);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Tente novamente.';
-      Alert.alert('Erro', message);
-    }
-  }
 
   async function saveHabit(habit: CreateHabitData) {
     if (!user) {
@@ -81,7 +63,6 @@ function AppNavigator() {
     try {
       const createdHabit = await createHabit(user.id, habit);
       setHabits(currentHabits => [...currentHabits, createdHabit]);
-      refreshDashboard();
       Alert.alert('Sucesso', 'Hábito criado com sucesso.');
       return true;
     } catch (error) {
@@ -94,7 +75,7 @@ function AppNavigator() {
   async function saveHabitChanges(
     habitId: number,
     title: string,
-    period: Habit['period'],
+    period: HabitPeriod,
   ) {
     if (!user) {
       return false;
@@ -124,28 +105,44 @@ function AppNavigator() {
     }
 
     try {
-      const checkinId = todayCheckins[habitId];
+      const checkin = checkins.find(
+        item => item.habitId === habitId && item.date === selectedDate,
+      );
 
-      if (checkinId) {
-        await removeTodayCheckin(user.id, habitId, checkinId);
-        setTodayCheckins(currentCheckins => {
-          const updatedCheckins = { ...currentCheckins };
-          delete updatedCheckins[habitId];
-          return updatedCheckins;
-        });
-        refreshDashboard();
+      if (checkin) {
+        await removeCheckin(user.id, habitId, checkin.id);
+        setCheckins(currentCheckins =>
+          currentCheckins.filter(item => item.id !== checkin.id),
+        );
         return;
       }
 
-      const checkin = await createTodayCheckin(user.id, habitId);
-      setTodayCheckins(currentCheckins => ({
-        ...currentCheckins,
-        [habitId]: checkin.id,
-      }));
-      refreshDashboard();
+      const createdCheckin = await createCheckin(user.id, habitId, selectedDate);
+      setCheckins(currentCheckins => [...currentCheckins, createdCheckin]);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Tente novamente.';
       Alert.alert('Erro', message);
+    }
+  }
+
+  async function removeHabit(habitId: number) {
+    if (!user) {
+      return false;
+    }
+
+    try {
+      await deleteHabit(user.id, habitId);
+      setHabits(currentHabits =>
+        currentHabits.filter(habit => habit.id !== habitId),
+      );
+      setCheckins(currentCheckins =>
+        currentCheckins.filter(checkin => checkin.habitId !== habitId),
+      );
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Tente novamente.';
+      Alert.alert('Erro', message);
+      return false;
     }
   }
 
@@ -184,12 +181,10 @@ function AppNavigator() {
                   onLogout={() => setUser(null)}
                   onCreateHabit={() => navigation.navigate('CreateHabit')}
                   onOpenHabits={() => navigation.navigate('Habits')}
-                  completedHabitIds={Object.keys(todayCheckins).map(Number)}
+                  checkins={checkins}
+                  selectedDate={selectedDate}
+                  onSelectDate={setSelectedDate}
                   onCompleteHabit={toggleHabit}
-                  weeklyCompletionPercentage={
-                    dashboard.weeklyCompletionPercentage
-                  }
-                  weekDays={dashboard.weekDays}
                 />
               )}
             </Stack.Screen>
@@ -223,21 +218,19 @@ function AppNavigator() {
                   return null;
                 }
 
-                const habit: Habit = {
-                  id: selectedHabit.id,
-                  title: selectedHabit.title,
-                  period: selectedHabit.period,
-                  completed: Boolean(todayCheckins[selectedHabit.id]),
-                };
-
                 return (
                   <HabitDetailsScreen
-                    habit={habit}
+                    habit={selectedHabit}
+                    checkins={checkins.filter(
+                      checkin => checkin.habitId === selectedHabit.id,
+                    )}
+                    selectedDate={selectedDate}
                     onBack={() => navigation.goBack()}
-                    onToggleHabit={() => toggleHabit(habit.id)}
+                    onToggleHabit={() => toggleHabit(selectedHabit.id)}
                     onUpdateHabit={(title, period) =>
-                      saveHabitChanges(habit.id, title, period)
+                      saveHabitChanges(selectedHabit.id, title, period)
                     }
+                    onDeleteHabit={() => removeHabit(selectedHabit.id)}
                   />
                 );
               }}

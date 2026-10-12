@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -11,91 +11,117 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons/static';
 import { fontFamily, fontSize } from '../styles/typography';
-import { Habit, HabitPeriod } from '../types/habit';
+import { HabitCheckin, HabitPeriod, UserHabit } from '../types/habit';
 
 type Props = {
-  habit: Habit;
+  habit: UserHabit;
+  checkins: HabitCheckin[];
+  selectedDate: string;
   onBack: () => void;
   onToggleHabit: () => void;
   onUpdateHabit: (title: string, period: HabitPeriod) => Promise<boolean>;
+  onDeleteHabit: () => Promise<boolean>;
 };
-type IconName =
-  | 'local-fire-department'
-  | 'emoji-events'
-  | 'track-changes'
-  | 'access-alarm'
-  | 'spa';
 
-const weekDays = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'S\u00c1B', 'DOM'];
-const periods: { key: HabitPeriod; label: string }[] = [
-  { key: 'MANHA', label: 'MANH\u00c3' },
-  { key: 'TARDE', label: 'TARDE' },
-  { key: 'NOITE', label: 'NOITE' },
-];
-const completedDays = [2, 3, 5, 6, 7, 9, 10, 11, 12, 13, 15];
+const periods: HabitPeriod[] = ['MANHA', 'TARDE', 'NOITE'];
+const labels = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+const weekDayLabels = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
 
-function HabitDetailsScreen({
-  habit,
-  onBack,
-  onToggleHabit,
-  onUpdateHabit,
-}: Props) {
-  const [isEditing, setIsEditing] = useState(false);
+function dateKey(date: Date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function HabitDetailsScreen(props: Props) {
+  const {
+    habit,
+    checkins,
+    selectedDate,
+    onBack,
+    onToggleHabit,
+    onUpdateHabit,
+    onDeleteHabit,
+  } = props;
+  const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(habit.title);
   const [period, setPeriod] = useState<HabitPeriod>(habit.period);
-  const isMeditation = habit.title.toLowerCase().includes('meditar');
+  const dates = checkins.map(checkin => checkin.date);
+  const today = new Date();
+  const week = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - 6 + index);
+    return { date: dateKey(date), label: labels[date.getDay()] };
+  });
+  const weekDone = week.filter(day => dates.includes(day.date)).length;
+  const successRate = Math.round(
+    (Array.from({ length: 30 }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - index);
+      return dateKey(date);
+    }).filter(date => dates.includes(date)).length /
+      30) *
+      100,
+  );
+  const completed = dates.includes(selectedDate);
+  const schedule = habit.weekDays.map(day => weekDayLabels[day]).join(', ');
+  const daysInMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    0,
+  ).getDate();
 
-  async function saveHabit() {
-    if (title.trim()) {
-      const updated = await onUpdateHabit(title.trim(), period);
-
-      if (updated) {
-        setIsEditing(false);
-      }
+  async function save() {
+    if (title.trim() && (await onUpdateHabit(title.trim(), period))) {
+      setEditing(false);
     }
   }
 
-  if (isEditing) {
+  function remove() {
+    Alert.alert('Excluir hábito', 'Essa ação não pode ser desfeita.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => (await onDeleteHabit()) && onBack(),
+      },
+    ]);
+  }
+
+  if (editing) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" />
-        <Header
-          title={'Editar H\u00e1bito'}
-          onBack={() => setIsEditing(false)}
-        />
-        <View style={styles.editContent}>
-          <Text style={styles.label}>{'NOME DO H\u00c1BITO'}</Text>
+      <SafeAreaView style={styles.safe}>
+        <Header title="Editar Hábito" onBack={() => setEditing(false)} />
+        <View style={styles.edit}>
+          <Text style={styles.label}>NOME DO HÁBITO</Text>
           <TextInput
             style={styles.input}
             value={title}
             onChangeText={setTitle}
           />
-          <Text style={styles.label}>{'PER\u00cdODO DO DIA'}</Text>
-          <View style={styles.periodButtons}>
+          <Text style={styles.label}>PERÍODO DO DIA</Text>
+          <View style={styles.periods}>
             {periods.map(item => (
               <Pressable
-                key={item.key}
-                onPress={() => setPeriod(item.key)}
+                key={item}
+                onPress={() => setPeriod(item)}
                 style={[
                   styles.periodButton,
-                  period === item.key && styles.periodButtonSelected,
+                  period === item && styles.selected,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.periodButtonText,
-                    period === item.key && styles.periodButtonTextSelected,
-                  ]}
-                >
-                  {item.label}
-                </Text>
+                <Text style={styles.periodText}>{item}</Text>
               </Pressable>
             ))}
           </View>
-          <Pressable style={styles.saveButton} onPress={saveHabit}>
-            <Text style={styles.saveButtonText}>
-              {'Salvar Altera\u00e7\u00f5es'}
-            </Text>
+          <Pressable style={styles.save} onPress={save}>
+            <Text style={styles.saveText}>Salvar alterações</Text>
+          </Pressable>
+          <Pressable style={styles.delete} onPress={remove}>
+            <MaterialIcons name="delete-outline" size={20} color="#be3a3a" />
+            <Text style={styles.deleteText}>Excluir hábito</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -103,146 +129,113 @@ function HabitDetailsScreen({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={styles.safe}>
       <Header
-        title={'Detalhes do H\u00e1bito'}
+        title="Detalhes do Hábito"
         onBack={onBack}
-        action={() => setIsEditing(true)}
+        action={() => setEditing(true)}
       />
       <ScrollView
         contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+        overScrollMode="never"
+        bounces={false}
+        alwaysBounceVertical={false}
       >
-        <Text style={styles.overline}>{'DETALHES DO H\u00c1BITO'}</Text>
-        <View style={styles.titleRow}>
-          <Text style={styles.title}>{habit.title}</Text>
-          <View style={styles.moreButton}>
-            <MaterialIcons name="more-horiz" size={22} color="#66716e" />
-          </View>
-        </View>
+        <Text style={styles.overline}>DETALHES DO HÁBITO</Text>
+        <Text style={styles.title}>{habit.title}</Text>
         <View style={styles.habitCard}>
-          <View style={styles.habitIconBox}>
+          <View style={styles.icon}>
             <MaterialIcons name="self-improvement" size={24} color="#0d2721" />
           </View>
-          <View style={styles.habitInfo}>
-            <Text style={styles.periodBadge}>
-              {periods.find(item => item.key === habit.period)?.label}
-            </Text>
-            <Text style={styles.habitName}>
-              {isMeditation
-                ? 'Respira\u00e7\u00e3o & Foco'
-                : 'Hidrata\u00e7\u00e3o'}
-            </Text>
-            <Text style={styles.habitMeta}>
-              {isMeditation
-                ? 'Meta di\u00e1ria: 1 sess\u00e3o'
-                : 'Meta di\u00e1ria: 1 registro'}
-            </Text>
+          <View style={styles.info}>
+            <Text style={styles.badge}>{habit.period}</Text>
+            <Text style={styles.name}>{habit.category}</Text>
+            <Text style={styles.muted}>Frequência: {habit.frequency}</Text>
+            <Text style={styles.muted}>Dias: {schedule}</Text>
           </View>
-          <View style={styles.doneCircle}>
-            <MaterialIcons name="check" size={20} color="#fff" />
+          <View style={[styles.status, !completed && styles.statusOff]}>
+            <MaterialIcons
+              name={completed ? 'check' : 'radio-button-unchecked'}
+              size={20}
+              color={completed ? '#fff' : '#6f7e7a'}
+            />
           </View>
         </View>
-
-        <SectionHeader title="SEMANA" detail="Meta: 6/7 dias" />
+        <Section title="SEMANA" detail={weekDone + '/7 dias'} />
         <View style={styles.card}>
-          <View style={styles.weekDays}>
-            {weekDays.map((day, index) => {
-              const done = index < 4;
-              const today = index === 3;
-              return (
-                <View key={day} style={styles.weekDay}>
-                  <Text style={styles.weekDayText}>{day}</Text>
-                  <View
-                    style={[
-                      styles.weekCircle,
-                      done && styles.weekCircleDone,
-                      today && styles.weekCircleToday,
-                    ]}
-                  >
-                    {done &&
-                      (today ? (
-                        <Text style={styles.weekCheck}>4</Text>
-                      ) : (
-                        <MaterialIcons name="check" size={17} color="#147d69" />
-                      ))}
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-          <View style={styles.weekProgress}>
-            <Text style={styles.mutedText}>Progresso semanal</Text>
-            <Text style={styles.greenText}>{'71% Conclu\u00eddo'}</Text>
-          </View>
-          <View style={styles.progressTrack}>
-            <View style={styles.progressFill} />
-          </View>
-        </View>
-
-        <SectionHeader
-          title={'CONSIST\u00caNCIA'}
-          detail={'\u00daltimos 30 dias'}
-        />
-        <View style={styles.statsRow}>
-          <Stat icon="local-fire-department" value="14" label="Dias seguidos" />
-          <Stat icon="emoji-events" value="95%" label={'Taxa de \u00eaxito'} />
-          <Stat icon="track-changes" value="42" label={'Total sess\u00f5es'} />
-        </View>
-
-        <SectionHeader title={'HIST\u00d3RICO MENSAL'} detail="Outubro" />
-        <View style={styles.card}>
-          <View style={styles.historyWeekDays}>
-            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, index) => (
-              <Text key={`${day}-${index}`} style={styles.historyWeekDay}>
-                {day}
-              </Text>
-            ))}
-          </View>
-          <View style={styles.historyGrid}>
-            {Array.from({ length: 31 }, (_, index) => index + 1).map(day => {
-              const done = completedDays.includes(day);
-              const today = day === 15;
-              return (
+          <View style={styles.week}>
+            {week.map(day => (
+              <View key={day.date} style={styles.weekItem}>
+                <Text style={styles.day}>{day.label}</Text>
                 <View
-                  key={day}
                   style={[
-                    styles.historyDay,
-                    done && styles.historyDayDone,
-                    today && styles.historyDayToday,
+                    styles.circle,
+                    dates.includes(day.date) && styles.circleDone,
                   ]}
                 >
+                  {dates.includes(day.date) && (
+                    <MaterialIcons name="check" size={16} color="#147d69" />
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.muted}>Progresso semanal</Text>
+            <Text style={styles.green}>
+              {Math.round((weekDone / 7) * 100)}% concluído
+            </Text>
+          </View>
+          <View style={styles.track}>
+            <View
+              style={[
+                styles.fill,
+                { width: Math.round((weekDone / 7) * 100) + '%' },
+              ]}
+            />
+          </View>
+        </View>
+        <Section title="CONSISTÊNCIA" detail="Últimos 30 dias" />
+        <View style={styles.stats}>
+          <Stat value={String(checkins.length)} label="Total de sessões" />
+          <Stat value={successRate + '%'} label="Taxa de êxito" />
+          <Stat value={String(weekDone)} label="Dias na semana" />
+        </View>
+        <Section title="HISTÓRICO MENSAL" detail="Mês atual" />
+        <View style={styles.card}>
+          <View style={styles.history}>
+            {Array.from({ length: daysInMonth }, (_, index) => {
+              const date = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                index + 1,
+              );
+              const done = dates.includes(dateKey(date));
+              return (
+                <View
+                  key={index}
+                  style={[styles.historyDay, done && styles.historyDone]}
+                >
                   <Text
-                    style={[
-                      styles.historyDayText,
-                      (done || today) && styles.historyDayTextDone,
-                    ]}
+                    style={[styles.historyText, done && styles.historyTextDone]}
                   >
-                    {day}
+                    {index + 1}
                   </Text>
                 </View>
               );
             })}
           </View>
-          <View style={styles.legend}>
-            <Legend color="#c5f4e7" label={'Conclu\u00eddo'} />
-            <Legend color="#1bd0aa" label="Hoje" />
-            <Legend color="#f0f4f3" label="Restante" />
-          </View>
         </View>
       </ScrollView>
       <View style={styles.footer}>
-        <Pressable style={styles.completeButton} onPress={onToggleHabit}>
+        <Pressable style={styles.complete} onPress={onToggleHabit}>
           <MaterialIcons
-            name={habit.completed ? 'task-alt' : 'radio-button-unchecked'}
+            name={completed ? 'task-alt' : 'radio-button-unchecked'}
             size={20}
             color="#083e33"
           />
-          <Text style={styles.completeButtonText}>
-            {habit.completed
-              ? 'H\u00e1bito conclu\u00eddo'
-              : 'Concluir H\u00e1bito de Hoje'}
+          <Text style={styles.completeText}>
+            {completed ? 'Desmarcar hábito' : 'Concluir hábito'}
           </Text>
         </Pressable>
       </View>
@@ -261,56 +254,37 @@ function Header({
 }) {
   return (
     <View style={styles.header}>
-      <Pressable style={styles.backButton} onPress={onBack}>
+      <Pressable style={styles.back} onPress={onBack}>
         <MaterialIcons name="arrow-back" size={25} color="#202725" />
       </Pressable>
       <Text style={styles.headerTitle}>{title}</Text>
       {action && (
         <Pressable style={styles.editButton} onPress={action}>
-          <Text style={styles.editButtonText}>Editar</Text>
+          <Text style={styles.editText}>Editar</Text>
         </Pressable>
       )}
     </View>
   );
 }
-function SectionHeader({ title, detail }: { title: string; detail: string }) {
+function Section({ title, detail }: { title: string; detail: string }) {
   return (
-    <View style={styles.sectionHeader}>
+    <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.sectionDetail}>{detail}</Text>
+      <Text style={styles.detail}>{detail}</Text>
     </View>
   );
 }
-function Stat({
-  icon,
-  value,
-  label,
-}: {
-  icon: IconName;
-  value: string;
-  label: string;
-}) {
+function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <View style={styles.statCard}>
-      <View style={styles.statIcon}>
-        <MaterialIcons name={icon} size={18} color="#118b73" />
-      </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <View style={styles.legendItem}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={styles.legendText}>{label}</Text>
+    <View style={styles.stat}>
+      <Text style={styles.value}>{value}</Text>
+      <Text style={styles.muted}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f8fbfa' },
+  safe: { flex: 1, backgroundColor: '#f8fbfa' },
   header: {
     height: 56,
     flexDirection: 'row',
@@ -319,7 +293,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e8efed',
   },
-  backButton: {
+  back: {
     width: 48,
     height: 48,
     alignItems: 'center',
@@ -332,8 +306,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#202725',
   },
-  editButton: { padding: 10 },
-  editButtonText: {
+  editButton: { padding: 12 },
+  editText: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     fontWeight: '700',
@@ -345,25 +319,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize.small,
     color: '#55726b',
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   title: {
-    flex: 1,
     fontFamily: fontFamily.heading,
     fontSize: fontSize.title,
     color: '#111816',
     marginTop: 4,
-  },
-  moreButton: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 18,
-    backgroundColor: '#edf1f0',
   },
   habitCard: {
     minHeight: 86,
@@ -375,7 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     elevation: 3,
   },
-  habitIconBox: {
+  icon: {
     width: 50,
     height: 50,
     alignItems: 'center',
@@ -383,28 +343,28 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: '#c9f7e9',
   },
-  habitInfo: { flex: 1, marginLeft: 12 },
-  periodBadge: {
+  info: { flex: 1, marginLeft: 12 },
+  badge: {
     alignSelf: 'flex-start',
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     color: '#21836f',
     backgroundColor: '#e4faf3',
   },
-  habitName: {
+  name: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.body,
     fontWeight: '700',
     color: '#14221e',
     marginTop: 2,
+    textTransform: 'capitalize',
   },
-  habitMeta: {
+  muted: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     color: '#71817c',
-    marginTop: 3,
   },
-  doneCircle: {
+  status: {
     width: 34,
     height: 34,
     alignItems: 'center',
@@ -412,9 +372,9 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     backgroundColor: '#45ddb9',
   },
-  sectionHeader: {
+  statusOff: { backgroundColor: '#eef3f1' },
+  section: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 20,
     marginBottom: 8,
@@ -425,22 +385,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#17211e',
   },
-  sectionDetail: {
+  detail: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     color: '#337c6c',
   },
   card: { padding: 12, borderRadius: 8, backgroundColor: '#fff', elevation: 2 },
-  weekDays: { flexDirection: 'row' },
-  weekDay: { width: '14.2%', alignItems: 'center' },
-  weekDayText: {
+  week: { flexDirection: 'row' },
+  weekItem: { width: '14.28%', alignItems: 'center' },
+  day: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     fontWeight: '700',
     color: '#5c726c',
     marginBottom: 6,
   },
-  weekCircle: {
+  circle: {
     width: 28,
     height: 28,
     alignItems: 'center',
@@ -448,118 +408,60 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#e9eeee',
   },
-  weekCircleDone: { backgroundColor: '#aef1dd' },
-  weekCircleToday: { backgroundColor: '#20d4ae' },
-  weekCheck: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.small,
-    fontWeight: '800',
-    color: '#147d69',
-  },
-  weekProgress: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 14,
-  },
-  mutedText: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.small,
-    color: '#61736e',
-  },
-  greenText: {
+  circleDone: { backgroundColor: '#aef1dd' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 },
+  green: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     fontWeight: '700',
     color: '#168a73',
   },
-  progressTrack: {
+  track: {
     height: 6,
     overflow: 'hidden',
     marginTop: 6,
     borderRadius: 3,
     backgroundColor: '#e2e9e7',
   },
-  progressFill: {
-    width: '71%',
-    height: '100%',
-    borderRadius: 3,
-    backgroundColor: '#2bd3af',
-  },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  statCard: {
+  fill: { height: '100%', borderRadius: 3, backgroundColor: '#2bd3af' },
+  stats: { flexDirection: 'row', justifyContent: 'space-between' },
+  stat: {
     width: '31%',
-    minHeight: 106,
+    minHeight: 75,
     padding: 10,
     borderRadius: 8,
     backgroundColor: '#fff',
     elevation: 2,
   },
-  statIcon: {
-    width: 30,
-    height: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 15,
-    backgroundColor: '#d2f8ed',
-  },
-  statValue: {
+  value: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.subtitle,
     fontWeight: '800',
     color: '#15211e',
-    marginTop: 8,
   },
-  statLabel: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.small,
-    color: '#6f7e7a',
-    marginTop: 2,
-  },
-  historyWeekDays: { flexDirection: 'row', justifyContent: 'space-between' },
-  historyWeekDay: {
-    width: 34,
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.small,
-    color: '#6b7d78',
-    textAlign: 'center',
-  },
-  historyGrid: {
+  history: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: 8,
   },
   historyDay: {
-    width: 34,
+    width: '13%',
     height: 30,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 5,
+    marginRight: '1.28%',
     borderRadius: 5,
     backgroundColor: '#f0f4f3',
   },
-  historyDayDone: { backgroundColor: '#c5f4e7' },
-  historyDayToday: { backgroundColor: '#1bd0aa' },
-  historyDayText: {
+  historyDone: { backgroundColor: '#c5f4e7' },
+  historyText: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     color: '#6e7c79',
   },
-  historyDayTextDone: { fontWeight: '700', color: '#157c68' },
-  legend: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 6,
-  },
-  legendItem: { flexDirection: 'row', alignItems: 'center' },
-  legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 4 },
-  legendText: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.small,
-    color: '#74817e',
-  },
+  historyTextDone: { fontWeight: '700', color: '#157c68' },
   footer: { padding: 12, backgroundColor: '#f8fbfa' },
-  completeButton: {
+  complete: {
     height: 52,
     flexDirection: 'row',
     alignItems: 'center',
@@ -569,13 +471,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#23d6af',
     elevation: 4,
   },
-  completeButtonText: {
+  completeText: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.body,
     fontWeight: '700',
     color: '#083e33',
   },
-  editContent: { flex: 1, padding: 18 },
+  edit: { flex: 1, padding: 18 },
   label: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
@@ -594,7 +496,7 @@ const styles = StyleSheet.create({
     color: '#18231f',
     elevation: 2,
   },
-  periodButtons: { flexDirection: 'row', justifyContent: 'space-between' },
+  periods: { flexDirection: 'row', justifyContent: 'space-between' },
   periodButton: {
     width: '31%',
     height: 52,
@@ -604,19 +506,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     elevation: 2,
   },
-  periodButtonSelected: {
+  selected: {
     borderWidth: 1,
     borderColor: '#88e7d2',
     backgroundColor: '#effdf8',
   },
-  periodButtonText: {
+  periodText: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     fontWeight: '700',
     color: '#687773',
   },
-  periodButtonTextSelected: { color: '#118b73' },
-  saveButton: {
+  save: {
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
@@ -625,12 +526,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#20d4ae',
     elevation: 3,
   },
-  saveButtonText: {
+  saveText: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.body,
     fontWeight: '700',
     color: '#063e32',
   },
+  delete: {
+    height: 50,
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  deleteText: {
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.body,
+    fontWeight: '700',
+    color: '#be3a3a',
+  },
 });
-
 export default HabitDetailsScreen;

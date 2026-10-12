@@ -1,4 +1,15 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class UpdateHabitDto {
   @IsOptional()
@@ -13,6 +24,15 @@ export class UpdateHabitDto {
   @IsOptional()
   @IsIn(['MANHA', 'TARDE', 'NOITE'])
   period?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(7)
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(6, { each: true })
+  weekDays?: number[];
 
   @IsOptional()
   @IsIn(['diário', 'semanal'])

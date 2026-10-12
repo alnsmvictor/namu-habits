@@ -55,6 +55,7 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
     const created = await onCreateHabit({
       title: title.trim(),
       period,
+      weekDays: days,
       frequency: days.length === weekDays.length ? 'di\u00e1rio' : 'semanal',
       category: categories[category].value,
     });
@@ -76,6 +77,9 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
       </View>
       <ScrollView
         contentContainerStyle={styles.content}
+        overScrollMode="never"
+        bounces={false}
+        alwaysBounceVertical={false}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.titleRow}>
@@ -159,7 +163,9 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
               style={styles.dayButton}
               onPress={() => toggleDay(index)}
             >
-              <Text style={styles.dayText}>{day}</Text>
+              <Text numberOfLines={1} style={styles.dayText}>
+                {day}
+              </Text>
               <View
                 style={[
                   styles.dayCircle,
@@ -332,13 +338,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     elevation: 2,
   },
-  dayButton: { width: 28, alignItems: 'center' },
+  dayButton: { width: '14.28%', alignItems: 'center' },
   dayText: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     fontWeight: '700',
     color: '#6b807b',
     marginBottom: 6,
+    textAlign: 'center',
   },
   dayCircle: {
     width: 22,
