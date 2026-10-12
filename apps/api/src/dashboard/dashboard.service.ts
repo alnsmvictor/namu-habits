@@ -69,6 +69,11 @@ export class DashboardService {
       weeklyCompletionPercentage: expectedCheckins
         ? Math.round((completedCheckins / expectedCheckins) * 100)
         : 0,
+      weekDays: [...weekDates].reverse().map((date) => ({
+        label: this.getDayLabel(date),
+        completed: checkins.some((checkin) => checkin.date === date),
+        isToday: date === this.toDateKey(today),
+      })),
       habits: dashboardHabits,
     };
   }
@@ -95,5 +100,10 @@ export class DashboardService {
 
   private toDateKey(date: Date): string {
     return date.toISOString().slice(0, 10);
+  }
+
+  private getDayLabel(date: string): string {
+    const labels = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+    return labels[new Date(date + 'T12:00:00Z').getUTCDay()];
   }
 }

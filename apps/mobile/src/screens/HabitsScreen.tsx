@@ -15,9 +15,10 @@ import { UserHabit } from '../types/habit';
 type Props = {
   habits: UserHabit[];
   onBack: () => void;
+  onOpenHabit: (id: number) => void;
 };
 
-function HabitsScreen({ habits, onBack }: Props) {
+function HabitsScreen({ habits, onBack, onOpenHabit }: Props) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
@@ -40,7 +41,13 @@ function HabitsScreen({ habits, onBack }: Props) {
           {habits.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum hábito cadastrado ainda.</Text>
           ) : (
-            habits.map(habit => <HabitCard key={habit.id} habit={habit} />)
+            habits.map(habit => (
+              <HabitCard
+                key={habit.id}
+                habit={habit}
+                onPress={() => onOpenHabit(habit.id)}
+              />
+            ))
           )}
         </View>
       </ScrollView>

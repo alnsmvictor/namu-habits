@@ -24,6 +24,9 @@ export class Habit {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
+  @Column({ type: 'enum', enum: ['MANHA', 'TARDE', 'NOITE'] })
+  period: string;
+
   @Column({ type: 'enum', enum: ['diário', 'semanal', 'mensal'] })
   frequency: string;
 

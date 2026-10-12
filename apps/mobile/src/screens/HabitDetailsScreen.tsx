@@ -17,7 +17,7 @@ type Props = {
   habit: Habit;
   onBack: () => void;
   onToggleHabit: () => void;
-  onUpdateHabit: (title: string, period: HabitPeriod) => void;
+  onUpdateHabit: (title: string, period: HabitPeriod) => Promise<boolean>;
 };
 type IconName =
   | 'local-fire-department'
@@ -45,10 +45,13 @@ function HabitDetailsScreen({
   const [period, setPeriod] = useState<HabitPeriod>(habit.period);
   const isMeditation = habit.title.toLowerCase().includes('meditar');
 
-  function saveHabit() {
+  async function saveHabit() {
     if (title.trim()) {
-      onUpdateHabit(title.trim(), period);
-      setIsEditing(false);
+      const updated = await onUpdateHabit(title.trim(), period);
+
+      if (updated) {
+        setIsEditing(false);
+      }
     }
   }
 
@@ -188,20 +191,6 @@ function HabitDetailsScreen({
           <Stat icon="track-changes" value="42" label={'Total sess\u00f5es'} />
         </View>
 
-        <Text style={styles.sectionTitle}>{'ROTINA & GATILHO'}</Text>
-        <View style={styles.card}>
-          <Routine
-            icon="access-alarm"
-            title="Logo ao acordar - 07:30"
-            text="Lembrete sonoro suave ativado"
-          />
-          <Routine
-            icon="spa"
-            title={'Espa\u00e7o Zen / Quarto'}
-            text={'Almofada de medita\u00e7\u00e3o e luz natural'}
-          />
-        </View>
-
         <SectionHeader title={'HIST\u00d3RICO MENSAL'} detail="Outubro" />
         <View style={styles.card}>
           <View style={styles.historyWeekDays}>
@@ -308,27 +297,6 @@ function Stat({
       </View>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-function Routine({
-  icon,
-  title,
-  text,
-}: {
-  icon: IconName;
-  title: string;
-  text: string;
-}) {
-  return (
-    <View style={styles.routineRow}>
-      <View style={styles.routineIcon}>
-        <MaterialIcons name={icon} size={19} color="#197e69" />
-      </View>
-      <View>
-        <Text style={styles.routineTitle}>{title}</Text>
-        <Text style={styles.routineText}>{text}</Text>
-      </View>
     </View>
   );
 }
@@ -546,32 +514,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.small,
     color: '#6f7e7a',
     marginTop: 2,
-  },
-  routineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  routineIcon: {
-    width: 34,
-    height: 34,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 7,
-    backgroundColor: '#cff8ed',
-    marginRight: 10,
-  },
-  routineTitle: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.body,
-    fontWeight: '700',
-    color: '#1e2e29',
-  },
-  routineText: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.small,
-    color: '#73837e',
-    marginTop: 3,
   },
   historyWeekDays: { flexDirection: 'row', justifyContent: 'space-between' },
   historyWeekDay: {

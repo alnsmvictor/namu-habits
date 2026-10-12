@@ -11,7 +11,24 @@ export type UserHabit = {
   id: number;
   title: string;
   description: string | null;
+  period: HabitPeriod;
   frequency: string;
   category: string;
   userId: number;
+};
+
+export type CreateHabitData = {
+  title: string;
+  period: HabitPeriod;
+  frequency: string;
+  category: string;
+};
+
+export type DashboardData = {
+  weeklyCompletionPercentage: number;
+  weekDays: {
+    label: string;
+    completed: boolean;
+    isToday: boolean;
+  }[];
 };

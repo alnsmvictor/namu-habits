@@ -11,6 +11,10 @@ export class UpdateHabitDto {
   description?: string;
 
   @IsOptional()
+  @IsIn(['MANHA', 'TARDE', 'NOITE'])
+  period?: string;
+
+  @IsOptional()
   @IsIn(['diário', 'semanal'])
   frequency?: string;
 

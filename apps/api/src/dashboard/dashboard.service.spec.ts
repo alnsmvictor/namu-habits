@@ -43,6 +43,15 @@ describe('DashboardService', () => {
     await expect(service.getDashboard(1)).resolves.toEqual({
       totalHabits: 2,
       weeklyCompletionPercentage: 50,
+      weekDays: [
+        { label: 'SÁB', completed: false, isToday: false },
+        { label: 'DOM', completed: false, isToday: false },
+        { label: 'SEG', completed: false, isToday: false },
+        { label: 'TER', completed: false, isToday: false },
+        { label: 'QUA', completed: true, isToday: false },
+        { label: 'QUI', completed: true, isToday: false },
+        { label: 'SEX', completed: true, isToday: true },
+      ],
       habits: [
         { id: 1, title: 'Caminhada', currentStreak: 3 },
         { id: 2, title: 'Refeição saudável', currentStreak: 1 },

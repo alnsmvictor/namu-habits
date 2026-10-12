@@ -11,18 +11,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons/static';
 import { fontFamily, fontSize } from '../styles/typography';
-import { HabitPeriod } from '../types/habit';
+import { CreateHabitData, HabitPeriod } from '../types/habit';
 
 type Props = {
   onBack: () => void;
-  onCreateHabit: (title: string, period: HabitPeriod) => void;
+  onCreateHabit: (habit: CreateHabitData) => Promise<boolean>;
 };
 const categories = [
-  'self-improvement',
-  'water-drop',
-  'fitness-center',
-  'menu-book',
-  'directions-run',
+  { icon: 'self-improvement', value: 'mental' },
+  { icon: 'water-drop', value: 'sa\u00fade' },
+  { icon: 'fitness-center', value: 'exerc\u00edcio' },
+  { icon: 'menu-book', value: 'mental' },
+  { icon: 'directions-run', value: 'exerc\u00edcio' },
 ] as const;
 const periods = [
   { key: 'MANHA', label: 'MANH\u00c3', icon: 'wb-sunny' },
@@ -36,6 +36,7 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
   const [category, setCategory] = useState(0);
   const [period, setPeriod] = useState<HabitPeriod>('MANHA');
   const [days, setDays] = useState([0, 1, 2, 3, 4, 5, 6]);
+  const [isSaving, setIsSaving] = useState(false);
   const toggleDay = (index: number) =>
     setDays(current =>
       current.includes(index)
@@ -44,7 +45,26 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
     );
   const toggleAll = () =>
     setDays(days.length === weekDays.length ? [] : [0, 1, 2, 3, 4, 5, 6]);
-  const create = () => title.trim() && onCreateHabit(title.trim(), period);
+  async function create() {
+    if (!title.trim() || isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+
+    const created = await onCreateHabit({
+      title: title.trim(),
+      period,
+      frequency: days.length === weekDays.length ? 'di\u00e1rio' : 'semanal',
+      category: categories[category].value,
+    });
+
+    setIsSaving(false);
+
+    if (created) {
+      onBack();
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -83,16 +103,16 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
           <Text style={styles.selectedText}>Selecionado</Text>
         </View>
         <View style={styles.categoryList}>
-          {categories.map((icon, index) => (
+          {categories.map((item, index) => (
             <Pressable
-              key={icon}
+              key={item.icon}
               onPress={() => setCategory(index)}
               style={[
                 styles.categoryButton,
                 category === index && styles.categoryButtonSelected,
               ]}
             >
-              <MaterialIcons name={icon} size={21} color="#17201d" />
+              <MaterialIcons name={item.icon} size={21} color="#17201d" />
             </Pressable>
           ))}
         </View>
@@ -156,12 +176,14 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
         <Pressable
           style={[
             styles.createButton,
-            !title.trim() && styles.createButtonDisabled,
+            (!title.trim() || isSaving) && styles.createButtonDisabled,
           ]}
           onPress={create}
         >
           <MaterialIcons name="add-circle-outline" size={20} color="#073c32" />
-          <Text style={styles.createButtonText}>{'Criar H\u00e1bito'}</Text>
+          <Text style={styles.createButtonText}>
+            {isSaving ? 'Criando...' : 'Criar H\u00e1bito'}
+          </Text>
         </Pressable>
         <Pressable onPress={onBack}>
           <Text style={styles.cancelText}>Cancelar e Voltar</Text>

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Param,
@@ -29,5 +30,14 @@ export class CheckinsController {
     @Headers('x-user-id') userId: string,
   ) {
     return this.checkinsService.create(habitId, dto, Number(userId));
+  }
+
+  @Delete(':checkinId')
+  remove(
+    @Param('habitId', ParseIntPipe) habitId: number,
+    @Param('checkinId', ParseIntPipe) checkinId: number,
+    @Headers('x-user-id') userId: string,
+  ) {
+    return this.checkinsService.remove(habitId, checkinId, Number(userId));
   }
 }

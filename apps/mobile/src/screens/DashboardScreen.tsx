@@ -12,7 +12,7 @@ import { MaterialIcons } from '@react-native-vector-icons/material-icons/static'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HabitCard from '../components/HabitCard';
 import { fontFamily, fontSize } from '../styles/typography';
-import { UserHabit } from '../types/habit';
+import { HabitPeriod, UserHabit } from '../types/habit';
 
 type DashboardScreenProps = {
   habits: UserHabit[];
@@ -20,7 +20,21 @@ type DashboardScreenProps = {
   onLogout: () => void;
   onCreateHabit: () => void;
   onOpenHabits: () => void;
+  completedHabitIds: number[];
+  onCompleteHabit: (habitId: number) => void;
+  weeklyCompletionPercentage: number;
+  weekDays: {
+    label: string;
+    completed: boolean;
+    isToday: boolean;
+  }[];
 };
+
+const periods: { key: HabitPeriod; label: string }[] = [
+  { key: 'MANHA', label: 'MANHÃ' },
+  { key: 'TARDE', label: 'TARDE' },
+  { key: 'NOITE', label: 'NOITE' },
+];
 
 const navigationItems = [
   { label: 'Geral', icon: 'home' },
@@ -29,14 +43,31 @@ const navigationItems = [
   { label: 'Jornada', icon: 'emoji-events' },
 ] as const;
 
+function getCurrentDate() {
+  const date = new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+    .format(new Date())
+    .replace('-', ' ');
+
+  return date.charAt(0).toUpperCase() + date.slice(1);
+}
+
 function DashboardScreen({
   habits,
   userName,
   onLogout,
   onCreateHabit,
   onOpenHabits,
+  completedHabitIds,
+  onCompleteHabit,
+  weeklyCompletionPercentage,
+  weekDays,
 }: DashboardScreenProps) {
   const [selectedTab, setSelectedTab] = useState('Geral');
+  const currentDate = getCurrentDate();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -56,17 +87,53 @@ function DashboardScreen({
       </View>
 
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={styles.content}
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
       >
+        <Text style={styles.currentDate}>{currentDate}</Text>
         <Text style={styles.greeting}>Bem vindo, {userName}</Text>
 
-        <View style={styles.listHeader}>
-          <Text style={styles.periodTitle}>SEUS HÁBITOS</Text>
+        <View style={styles.weekCard}>
+          {weekDays.map((day, index) => (
+            <View
+              key={index}
+              style={[styles.dayItem, day.isToday && styles.dayItemToday]}
+            >
+              <Text
+                style={[styles.dayText, day.isToday && styles.dayTextToday]}
+              >
+                {day.label}
+              </Text>
+              {day.completed ? (
+                <View style={styles.dayCompleted}>
+                  <MaterialIcons name="check" size={13} color="#42cdb0" />
+                </View>
+              ) : (
+                <View style={styles.dayDot} />
+              )}
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressText}>
+            {weeklyCompletionPercentage}% Concluído
+          </Text>
           <View style={styles.counterBadge}>
-            <Text style={styles.counterText}>{`${habits.length} cadastrados`}</Text>
+            <Text style={styles.counterText}>
+              {completedHabitIds.length} de {habits.length} Hábitos
+            </Text>
           </View>
+        </View>
+        <View style={styles.progressTrack}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: weeklyCompletionPercentage + '%' },
+            ]}
+          />
         </View>
 
         {habits.length === 0 ? (
@@ -74,7 +141,30 @@ function DashboardScreen({
             Você ainda não possui hábitos cadastrados.
           </Text>
         ) : (
-          habits.map(habit => <HabitCard key={habit.id} habit={habit} />)
+          periods.map(period => {
+            const periodHabits = habits.filter(
+              habit => habit.period === period.key,
+            );
+
+            if (periodHabits.length === 0) {
+              return null;
+            }
+
+            return (
+              <View key={period.key} style={styles.period}>
+                <Text style={styles.periodTitle}>{period.label}</Text>
+                {periodHabits.map(habit => (
+                  <HabitCard
+                    key={habit.id}
+                    habit={habit}
+                    showCheck
+                    completed={completedHabitIds.includes(habit.id)}
+                    onPress={() => onCompleteHabit(habit.id)}
+                  />
+                ))}
+              </View>
+            );
+          })
         )}
       </ScrollView>
 
@@ -136,7 +226,7 @@ function DashboardScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#ffffff' },
+  safeArea: { flex: 1, backgroundColor: '#fcfcfc' },
   header: {
     height: 68,
     alignItems: 'center',
@@ -170,11 +260,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 18,
     paddingTop: 23,
     paddingBottom: 115,
     backgroundColor: '#fcfcfc',
   },
+  scroll: { backgroundColor: '#fcfcfc' },
   greeting: {
     fontFamily: fontFamily.heading,
     fontSize: fontSize.display,
@@ -182,10 +274,79 @@ const styles = StyleSheet.create({
     color: '#090909',
     marginBottom: 13,
   },
+  currentDate: {
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.small,
+    color: '#8a9693',
+    marginBottom: 5,
+  },
+  weekCard: {
+    height: 62,
+    paddingHorizontal: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 9,
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  dayItem: {
+    width: 38,
+    height: 47,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+  },
+  dayItemToday: { borderWidth: 2, borderColor: '#8ae9d5' },
+  dayText: {
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.small,
+    fontWeight: '700',
+    color: '#9b9b9b',
+    marginBottom: 4,
+  },
+  dayTextToday: { color: '#5e5e5e' },
+  dayCompleted: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#d4f8ef',
+  },
+  dayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#d8d8d8' },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  progressText: {
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.small,
+    color: '#8a9693',
+  },
+  progressTrack: {
+    height: 8,
+    overflow: 'hidden',
+    borderRadius: 5,
+    backgroundColor: '#dedede',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 5,
+    backgroundColor: '#49e0be',
+  },
   listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 20,
     marginBottom: 14,
   },
   counterBadge: {
@@ -200,10 +361,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#199e85',
   },
+  sectionTitle: {
+    fontFamily: fontFamily.heading,
+    fontSize: fontSize.subtitle,
+    color: '#111111',
+  },
+  period: { marginBottom: 7 },
   periodTitle: {
     fontFamily: fontFamily.heading,
     fontSize: fontSize.subtitle,
     color: '#111111',
+    marginBottom: 9,
   },
   emptyText: {
     fontFamily: fontFamily.body,

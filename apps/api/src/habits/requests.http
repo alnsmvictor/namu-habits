@@ -18,6 +18,7 @@ x-user-id: {{userId}}
 {
   "title": "Beber água",
   "description": "Beber dois litros por dia",
+  "period": "MANHA",
   "frequency": "diário",
   "category": "saúde"
 }

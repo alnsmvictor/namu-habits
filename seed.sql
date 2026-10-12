@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS habits (
   user_id INT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
+  period ENUM('MANHA', 'TARDE', 'NOITE') NOT NULL DEFAULT 'MANHA',
   frequency ENUM('diário', 'semanal') NOT NULL,
   category ENUM('saúde', 'exercício', 'alimentação', 'mental') NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

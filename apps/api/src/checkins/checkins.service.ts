@@ -64,4 +64,32 @@ export class CheckinsService {
       order: { date: 'DESC' },
     });
   }
+
+  async remove(
+    habitId: number,
+    checkinId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
+    const habit = await this.habitsRepository.findOneBy({
+      id: habitId,
+      userId,
+    });
+
+    if (!habit) {
+      throw new NotFoundException('Hábito não encontrado');
+    }
+
+    const checkin = await this.checkinsRepository.findOneBy({
+      id: checkinId,
+      habitId,
+    });
+
+    if (!checkin) {
+      throw new NotFoundException('Check-in não encontrado');
+    }
+
+    await this.checkinsRepository.delete(checkinId);
+
+    return { message: 'Check-in removido com sucesso' };
+  }
 }

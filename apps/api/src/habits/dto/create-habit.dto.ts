@@ -9,6 +9,9 @@ export class CreateHabitDto {
   @IsString()
   description?: string;
 
+  @IsIn(['MANHA', 'TARDE', 'NOITE'])
+  period: string;
+
   @IsIn(['diário', 'semanal'])
   frequency: string;
 

@@ -6,18 +6,30 @@ import { UserHabit } from '../types/habit';
 type HabitCardProps = {
   habit: UserHabit;
   onPress?: () => void;
+  showCheck?: boolean;
+  completed?: boolean;
 };
 
-function HabitCard({ habit, onPress }: HabitCardProps) {
+function HabitCard({
+  habit,
+  onPress,
+  showCheck = false,
+  completed = false,
+}: HabitCardProps) {
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.iconBox}>
         <MaterialIcons name="self-improvement" size={24} color="#08231c" />
       </View>
-      <Text style={styles.title}>{habit.title}</Text>
-      <View style={styles.category}>
+      <View style={styles.info}>
+        <Text style={styles.title}>{habit.title}</Text>
         <Text style={styles.categoryText}>{habit.category}</Text>
       </View>
+      {showCheck && (
+        <View style={[styles.check, completed && styles.checkDone]}>
+          {completed && <MaterialIcons name="check" size={22} color="#ffffff" />}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -45,26 +57,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#cff9ee',
   },
-  title: {
+  info: {
     flex: 1,
     marginLeft: 18,
+  },
+  title: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.body,
     fontWeight: '700',
     color: '#080808',
-  },
-  category: {
-    maxWidth: 80,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 10,
-    backgroundColor: '#e8f8f3',
   },
   categoryText: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.small,
     color: '#267b6c',
     textTransform: 'capitalize',
+    marginTop: 3,
   },
   check: {
     width: 36,
@@ -76,6 +84,7 @@ const styles = StyleSheet.create({
     borderColor: '#e1e1e1',
     backgroundColor: '#f3f3f3',
   },
+  checkDone: { borderColor: '#000000', backgroundColor: '#000000' },
 });
 
 export default HabitCard;
