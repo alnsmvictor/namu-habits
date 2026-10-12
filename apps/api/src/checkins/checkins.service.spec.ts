@@ -98,4 +98,5 @@ describe('CheckinsService', () => {
     });
     expect(result).toEqual(checkins);
   });
+
 });

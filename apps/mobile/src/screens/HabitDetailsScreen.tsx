@@ -67,24 +67,34 @@ function HabitDetailsScreen(props: Props) {
   const [period, setPeriod] = useState<HabitPeriod>(habit.period);
   const [category, setCategory] = useState(habit.category);
   const [days, setDays] = useState(habit.weekDays);
-  const dates = checkins.map(checkin => checkin.date);
+  const checkinDates = checkins.map(checkin => checkin.date);
   const today = new Date();
   const week = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(today);
     date.setDate(today.getDate() - 6 + index);
-    return { date: dateKey(date), label: labels[date.getDay()] };
+    const dateValue = dateKey(date);
+
+    return {
+      date: dateValue,
+      label: labels[date.getDay()],
+      isHabitDay: habit.weekDays.includes(getWeekDayIndex(dateValue)),
+    };
   });
-  const weekDone = week.filter(day => dates.includes(day.date)).length;
+  const plannedWeekDays = week.filter(day => day.isHabitDay);
+  const weekDone = plannedWeekDays.filter(day =>
+    checkinDates.includes(day.date),
+  ).length;
+  const lastThirtyDays = Array.from({ length: 30 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - index);
+    return dateKey(date);
+  }).filter(date => habit.weekDays.includes(getWeekDayIndex(date)));
   const successRate = Math.round(
-    (Array.from({ length: 30 }, (_, index) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() - index);
-      return dateKey(date);
-    }).filter(date => dates.includes(date)).length /
-      30) *
+    (lastThirtyDays.filter(date => checkinDates.includes(date)).length /
+      lastThirtyDays.length) *
       100,
   );
-  const completed = dates.includes(selectedDate);
+  const completed = checkinDates.includes(selectedDate);
   const isHabitDay = habit.weekDays.includes(getWeekDayIndex(selectedDate));
   const canToggleHabit = isHabitDay || completed;
   const schedule = habit.weekDays.map(day => weekDayLabels[day]).join(', ');
@@ -257,7 +267,10 @@ function HabitDetailsScreen(props: Props) {
             />
           </View>
         </View>
-        <Section title="SEMANA" detail={weekDone + '/7 dias'} />
+        <Section
+          title="SEMANA"
+          detail={weekDone + '/' + plannedWeekDays.length + ' dias'}
+        />
         <View style={styles.card}>
           <View style={styles.week}>
             {week.map(day => (
@@ -266,10 +279,10 @@ function HabitDetailsScreen(props: Props) {
                 <View
                   style={[
                     styles.circle,
-                    dates.includes(day.date) && styles.circleDone,
+                    checkinDates.includes(day.date) && styles.circleDone,
                   ]}
                 >
-                  {dates.includes(day.date) && (
+                  {checkinDates.includes(day.date) && (
                     <MaterialIcons name="check" size={16} color="#147d69" />
                   )}
                 </View>
@@ -279,14 +292,22 @@ function HabitDetailsScreen(props: Props) {
           <View style={styles.row}>
             <Text style={styles.muted}>Progresso semanal</Text>
             <Text style={styles.green}>
-              {Math.round((weekDone / 7) * 100)}% concluído
+              {plannedWeekDays.length
+                ? Math.round((weekDone / plannedWeekDays.length) * 100)
+                : 0}
+              % concluído
             </Text>
           </View>
           <View style={styles.track}>
             <View
               style={[
                 styles.fill,
-                { width: Math.round((weekDone / 7) * 100) + '%' },
+                {
+                  width:
+                    (plannedWeekDays.length
+                      ? Math.round((weekDone / plannedWeekDays.length) * 100)
+                      : 0) + '%',
+                },
               ]}
             />
           </View>
@@ -309,7 +330,7 @@ function HabitDetailsScreen(props: Props) {
                 today.getMonth(),
                 index + 1,
               );
-              const done = dates.includes(dateKey(date));
+              const done = checkinDates.includes(dateKey(date));
               return (
                 <View
                   key={index}

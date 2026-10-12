@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Image,
   Pressable,
@@ -32,32 +31,28 @@ const periods: { key: HabitPeriod; label: string }[] = [
   { key: 'NOITE', label: 'NOITE' },
 ];
 
-const navigationItems = [
-  { label: 'Geral', icon: 'home' },
-  { label: 'Hábitos', icon: 'check-circle-outline' },
-  { label: 'Progresso', icon: 'trending-up' },
-  { label: 'Jornada', icon: 'emoji-events' },
-] as const;
-
 function getDateKey(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return date.getFullYear() + '-' + month + '-' + day;
 }
 
-function getWeekDays() {
+function getWeekDays(selectedDate: string) {
   const labels = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
-  const today = new Date();
+  const selected = new Date(`${selectedDate}T12:00:00`);
+  const start = new Date(selected);
+  const day = selected.getDay();
+
+  start.setDate(selected.getDate() - (day === 0 ? 6 : day - 1));
 
   return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - 6 + index);
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
     const dateKey = getDateKey(date);
 
     return {
       label: labels[date.getDay()],
       date: dateKey,
-      isToday: dateKey === getDateKey(today),
     };
   });
 }
@@ -78,7 +73,6 @@ function DashboardScreen({
   onSelectDate,
   onCompleteHabit,
 }: DashboardScreenProps) {
-  const [selectedTab, setSelectedTab] = useState('Geral');
   const currentDate = new Intl.DateTimeFormat('pt-BR', {
     weekday: 'long',
     day: 'numeric',
@@ -86,7 +80,13 @@ function DashboardScreen({
   })
     .format(new Date(selectedDate + 'T12:00:00'))
     .replace('-', ' ');
-  const weekDays = getWeekDays();
+  const weekDays = getWeekDays(selectedDate);
+
+  function changeWeek(amount: number) {
+    const date = new Date(`${selectedDate}T12:00:00`);
+    date.setDate(date.getDate() + amount * 7);
+    onSelectDate(getDateKey(date));
+  }
   const habitsForSelectedDay = habits.filter(habit =>
     habit.weekDays.includes(getWeekDayIndex(selectedDate)),
   );
@@ -132,6 +132,9 @@ function DashboardScreen({
         <Text style={styles.greeting}>Bem vindo, {userName}</Text>
 
         <View style={styles.weekCard}>
+          <Pressable style={styles.weekButton} onPress={() => changeWeek(-1)}>
+            <MaterialIcons name="chevron-left" size={22} color="#60716d" />
+          </Pressable>
           {weekDays.map(day => (
             <Pressable
               key={day.date}
@@ -158,6 +161,9 @@ function DashboardScreen({
               )}
             </Pressable>
           ))}
+          <Pressable style={styles.weekButton} onPress={() => changeWeek(1)}>
+            <MaterialIcons name="chevron-right" size={22} color="#60716d" />
+          </Pressable>
         </View>
 
         <View style={styles.progressHeader}>
@@ -208,57 +214,23 @@ function DashboardScreen({
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        {navigationItems.slice(0, 2).map(item => (
-          <Pressable
-            key={item.label}
-            style={styles.navItem}
-            onPress={() =>
-              item.label === 'Hábitos'
-                ? onOpenHabits()
-                : setSelectedTab(item.label)
-            }
-          >
-            <MaterialIcons
-              name={item.icon}
-              size={25}
-              color={selectedTab === item.label ? '#4d5c51' : '#596257'}
-            />
-            <Text
-              style={[
-                styles.navLabel,
-                selectedTab === item.label && styles.navLabelActive,
-              ]}
-            >
-              {item.label}
-            </Text>
-          </Pressable>
-        ))}
+        <View style={styles.navItem}>
+          <MaterialIcons name="home" size={25} color="#4d5c51" />
+          <Text style={[styles.navLabel, styles.navLabelActive]}>Geral</Text>
+        </View>
 
         <Pressable style={styles.addButton} onPress={onCreateHabit}>
           <MaterialIcons name="add" size={39} color="#ffffff" />
         </Pressable>
 
-        {navigationItems.slice(2).map(item => (
-          <Pressable
-            key={item.label}
-            style={styles.navItem}
-            onPress={() => setSelectedTab(item.label)}
-          >
-            <MaterialIcons
-              name={item.icon}
-              size={25}
-              color={selectedTab === item.label ? '#4d5c51' : '#596257'}
-            />
-            <Text
-              style={[
-                styles.navLabel,
-                selectedTab === item.label && styles.navLabelActive,
-              ]}
-            >
-              {item.label}
-            </Text>
-          </Pressable>
-        ))}
+        <Pressable style={styles.navItem} onPress={onOpenHabits}>
+          <MaterialIcons
+            name="check-circle-outline"
+            size={25}
+            color="#596257"
+          />
+          <Text style={styles.navLabel}>Hábitos</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -334,11 +306,17 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   dayItem: {
-    width: 38,
+    flex: 1,
     height: 47,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 6,
+  },
+  weekButton: {
+    width: 24,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dayItemToday: { borderWidth: 2, borderColor: '#8ae9d5' },
   dayText: {
@@ -373,6 +351,7 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 8,
     overflow: 'hidden',
+    marginBottom: 14,
     borderRadius: 5,
     backgroundColor: '#dedede',
   },
@@ -427,7 +406,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: 42,
     borderRadius: 32,
     backgroundColor: '#ffffff',
     shadowColor: '#000000',

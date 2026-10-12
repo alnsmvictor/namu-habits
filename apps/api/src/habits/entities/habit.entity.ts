@@ -15,8 +15,8 @@ export class Habit {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'user_id', nullable: true })
-  userId: number | null;
+  @Column({ name: 'user_id' })
+  userId: number;
 
   @Column({ length: 255 })
   title: string;

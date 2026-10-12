@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AuthScreen from '../screens/AuthScreen';
 import CreateHabitScreen from '../screens/CreateHabitScreen';
 import DashboardScreen from '../screens/DashboardScreen';
@@ -39,6 +39,7 @@ function AppNavigator() {
   const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState(getDateKey(new Date()));
   const [user, setUser] = useState<AuthUser | null>(null);
+  const isTogglingHabit = useRef(false);
 
   useEffect(() => {
     if (!user) {
@@ -140,9 +141,11 @@ function AppNavigator() {
   }
 
   async function toggleHabit(habitId: number) {
-    if (!user) {
+    if (!user || isTogglingHabit.current) {
       return;
     }
+
+    isTogglingHabit.current = true;
 
     try {
       const checkin = checkins.find(
@@ -169,6 +172,8 @@ function AppNavigator() {
       const message =
         error instanceof Error ? error.message : 'Tente novamente.';
       Alert.alert('Erro', message);
+    } finally {
+      isTogglingHabit.current = false;
     }
   }
 

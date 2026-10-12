@@ -33,6 +33,7 @@ const weekDays = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'S\u00c1B', 'DOM'];
 
 function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [category, setCategory] = useState(0);
   const [period, setPeriod] = useState<HabitPeriod>('MANHA');
   const [days, setDays] = useState([0, 1, 2, 3, 4, 5, 6]);
@@ -46,7 +47,7 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
   const toggleAll = () =>
     setDays(days.length === weekDays.length ? [] : [0, 1, 2, 3, 4, 5, 6]);
   async function create() {
-    if (!title.trim() || isSaving) {
+    if (!title.trim() || days.length === 0 || isSaving) {
       return;
     }
 
@@ -54,6 +55,7 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
 
     const created = await onCreateHabit({
       title: title.trim(),
+      description: description.trim() || undefined,
       period,
       weekDays: days,
       frequency: days.length === weekDays.length ? 'di\u00e1rio' : 'semanal',
@@ -102,9 +104,18 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
             onChangeText={setTitle}
           />
         </View>
+        <Text style={styles.label}>DESCRIÇÃO</Text>
+        <TextInput
+          style={styles.descriptionInput}
+          placeholder="Ex.: Fazer por 10 minutos ao acordar"
+          placeholderTextColor="#a1aaa8"
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          textAlignVertical="top"
+        />
         <View style={styles.sectionHeader}>
           <Text style={styles.label}>{'\u00cdCONE E CATEGORIA'}</Text>
-          <Text style={styles.selectedText}>Selecionado</Text>
         </View>
         <View style={styles.categoryList}>
           {categories.map((item, index) => (
@@ -182,8 +193,10 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
         <Pressable
           style={[
             styles.createButton,
-            (!title.trim() || isSaving) && styles.createButtonDisabled,
+            (!title.trim() || days.length === 0 || isSaving) &&
+              styles.createButtonDisabled,
           ]}
+          disabled={!title.trim() || days.length === 0 || isSaving}
           onPress={create}
         >
           <MaterialIcons name="add-circle-outline" size={20} color="#073c32" />
@@ -265,6 +278,17 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.body,
     fontSize: fontSize.body,
     color: '#111615',
+  },
+  descriptionInput: {
+    minHeight: 76,
+    padding: 14,
+    marginBottom: 18,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.body,
+    color: '#111615',
+    elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',

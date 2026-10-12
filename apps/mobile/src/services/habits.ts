@@ -5,7 +5,7 @@ import {
   UpdateHabitData,
   UserHabit,
 } from '../types/habit';
-import { API_URL } from './auth';
+import { API_URL } from '../config/api';
 
 export async function getHabits(userId: number): Promise<UserHabit[]> {
   const response = await fetch(`${API_URL}/habits`, {

@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,23 +11,11 @@ import { RegisterDto } from './dto/register.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
-export class AuthService implements OnModuleInit {
+export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
   ) {}
-
-  async onModuleInit() {
-    await this.usersRepository.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        password_hash VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-  }
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();

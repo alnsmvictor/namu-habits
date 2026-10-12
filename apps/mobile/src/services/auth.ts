@@ -1,3 +1,5 @@
+import { API_URL } from '../config/api';
+
 export type AuthUser = {
   id: number;
   name: string;
@@ -8,8 +10,6 @@ export type AuthResponse = {
   message: string;
   user: AuthUser;
 };
-
-export const API_URL = 'http://10.0.2.2:3001';
 
 async function request(path: string, body: object): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}${path}`, {
