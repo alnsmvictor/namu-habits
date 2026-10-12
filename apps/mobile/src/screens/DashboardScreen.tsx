@@ -91,7 +91,11 @@ function DashboardScreen({
     habit.weekDays.includes(getWeekDayIndex(selectedDate)),
   );
   const completedHabitIds = checkins
-    .filter(checkin => checkin.date === selectedDate)
+    .filter(
+      checkin =>
+        checkin.date === selectedDate &&
+        habitsForSelectedDay.some(habit => habit.id === checkin.habitId),
+    )
     .map(checkin => checkin.habitId);
   const dailyPercentage = habitsForSelectedDay.length
     ? Math.round((completedHabitIds.length / habitsForSelectedDay.length) * 100)

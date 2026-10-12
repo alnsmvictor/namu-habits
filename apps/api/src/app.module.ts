@@ -28,9 +28,9 @@ import { AuthModule } from './auth/auth.module';
       }),
     }),
 
+    DashboardModule,
     HabitsModule,
     CheckinsModule,
-    DashboardModule,
     AuthModule,
   ],
 })

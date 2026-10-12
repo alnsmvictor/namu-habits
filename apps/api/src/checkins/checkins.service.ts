@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -30,6 +31,14 @@ export class CheckinsService {
 
     if (!habit) {
       throw new NotFoundException('Hábito não encontrado');
+    }
+
+    const weekDays = habit.weekDays ?? [0, 1, 2, 3, 4, 5, 6];
+
+    if (!this.isHabitDay(dto.date, weekDays)) {
+      throw new BadRequestException(
+        'Hábito não está programado para esta data',
+      );
     }
 
     const existingCheckin = await this.checkinsRepository.findOneBy({
@@ -91,5 +100,12 @@ export class CheckinsService {
     await this.checkinsRepository.delete(checkinId);
 
     return { message: 'Check-in removido com sucesso' };
+  }
+
+  private isHabitDay(date: string, weekDays: number[]): boolean {
+    const day = new Date(`${date}T12:00:00Z`).getUTCDay();
+    const weekDayIndex = day === 0 ? 6 : day - 1;
+
+    return weekDays.includes(weekDayIndex);
   }
 }

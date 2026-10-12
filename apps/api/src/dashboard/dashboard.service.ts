@@ -29,6 +29,13 @@ export class DashboardService {
     const checkinsByHabit = new Map<number, Set<string>>();
 
     for (const checkin of checkins) {
+      const habit = habits.find((item) => item.id === checkin.habitId);
+      const weekDays = habit?.weekDays ?? [0, 1, 2, 3, 4, 5, 6];
+
+      if (!habit || !this.isHabitDay(checkin.date, weekDays)) {
+        continue;
+      }
+
       const dates = checkinsByHabit.get(checkin.habitId) ?? new Set<string>();
       dates.add(checkin.date);
       checkinsByHabit.set(checkin.habitId, dates);
@@ -40,17 +47,25 @@ export class DashboardService {
     );
     const weekStart = weekDates[weekDates.length - 1];
 
-    const expectedCheckins = habits.reduce(
-      (total, habit) => total + (habit.frequency === 'semanal' ? 1 : 7),
-      0,
-    );
+    const expectedCheckins = habits.reduce((total, habit) => {
+      const weekDays = habit.weekDays ?? [0, 1, 2, 3, 4, 5, 6];
+
+      return (
+        total +
+        weekDates.filter(date => this.isHabitDay(date, weekDays)).length
+      );
+    }, 0);
     const completedCheckins = habits.reduce((total, habit) => {
       const dates = checkinsByHabit.get(habit.id) ?? new Set<string>();
+      const weekDays = habit.weekDays ?? [0, 1, 2, 3, 4, 5, 6];
 
       return (
         total +
         [...dates].filter(
-          (date) => date >= weekStart && weekDates.includes(date),
+          (date) =>
+            date >= weekStart &&
+            weekDates.includes(date) &&
+            this.isHabitDay(date, weekDays),
         ).length
       );
     }, 0);
@@ -60,6 +75,7 @@ export class DashboardService {
       title: habit.title,
       currentStreak: this.getCurrentStreak(
         checkinsByHabit.get(habit.id) ?? new Set<string>(),
+        habit.weekDays ?? [0, 1, 2, 3, 4, 5, 6],
         today,
       ),
     }));
@@ -71,18 +87,28 @@ export class DashboardService {
         : 0,
       weekDays: [...weekDates].reverse().map((date) => ({
         label: this.getDayLabel(date),
-        completed: checkins.some((checkin) => checkin.date === date),
+        completed: [...checkinsByHabit.values()].some((dates) =>
+          dates.has(date),
+        ),
         isToday: date === this.toDateKey(today),
       })),
       habits: dashboardHabits,
     };
   }
 
-  private getCurrentStreak(dates: Set<string>, today: Date): number {
+  private getCurrentStreak(
+    dates: Set<string>,
+    weekDays: number[],
+    today: Date,
+  ): number {
     let streak = 0;
 
-    for (let index = 0; ; index += 1) {
+    for (let index = 0; index < 365; index += 1) {
       const date = this.toDateKey(this.addDays(today, -index));
+
+      if (!this.isHabitDay(date, weekDays)) {
+        continue;
+      }
 
       if (!dates.has(date)) {
         return streak;
@@ -90,6 +116,15 @@ export class DashboardService {
 
       streak += 1;
     }
+
+    return streak;
+  }
+
+  private isHabitDay(date: string, weekDays: number[]): boolean {
+    const day = new Date(date + 'T12:00:00Z').getUTCDay();
+    const weekDayIndex = day === 0 ? 6 : day - 1;
+
+    return weekDays.includes(weekDayIndex);
   }
 
   private addDays(date: Date, days: number): Date {

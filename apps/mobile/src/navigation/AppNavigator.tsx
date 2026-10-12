@@ -12,6 +12,7 @@ import {
   createHabit,
   createCheckin,
   deleteHabit,
+  getDashboard,
   getCheckins,
   getHabits,
   removeCheckin,
@@ -20,7 +21,7 @@ import {
 import {
   CreateHabitData,
   HabitCheckin,
-  HabitPeriod,
+  UpdateHabitData,
   UserHabit,
 } from '../types/habit';
 
@@ -48,12 +49,51 @@ function AppNavigator() {
 
     getHabits(user.id)
       .then(async loadedHabits => {
-        setHabits(loadedHabits);
+        const dashboard = await getDashboard(user.id);
+        const habitsWithStreak = loadedHabits.map(habit => {
+          const dashboardHabit = dashboard.habits.find(
+            item => item.id === habit.id,
+          );
+
+          return {
+            ...habit,
+            currentStreak: dashboardHabit?.currentStreak ?? 0,
+          };
+        });
+
+        setHabits(habitsWithStreak);
         const loadedCheckins = await getCheckins(user.id, loadedHabits);
         setCheckins(loadedCheckins);
       })
       .catch(error => Alert.alert('Erro', error.message));
   }, [user]);
+
+  async function refreshStreaks() {
+    if (!user) {
+      return;
+    }
+
+    try {
+      const dashboard = await getDashboard(user.id);
+
+      setHabits(currentHabits =>
+        currentHabits.map(habit => {
+          const dashboardHabit = dashboard.habits.find(
+            item => item.id === habit.id,
+          );
+
+          return {
+            ...habit,
+            currentStreak: dashboardHabit?.currentStreak ?? 0,
+          };
+        }),
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Tente novamente.';
+      Alert.alert('Erro', message);
+    }
+  }
 
   async function saveHabit(habit: CreateHabitData) {
     if (!user) {
@@ -62,38 +102,38 @@ function AppNavigator() {
 
     try {
       const createdHabit = await createHabit(user.id, habit);
-      setHabits(currentHabits => [...currentHabits, createdHabit]);
+      setHabits(currentHabits => [
+        ...currentHabits,
+        { ...createdHabit, currentStreak: 0 },
+      ]);
       Alert.alert('Sucesso', 'Hábito criado com sucesso.');
       return true;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Tente novamente.';
+      const message =
+        error instanceof Error ? error.message : 'Tente novamente.';
       Alert.alert('Erro', message);
       return false;
     }
   }
 
-  async function saveHabitChanges(
-    habitId: number,
-    title: string,
-    period: HabitPeriod,
-  ) {
+  async function saveHabitChanges(habitId: number, habitData: UpdateHabitData) {
     if (!user) {
       return false;
     }
 
     try {
-      const updatedHabit = await updateHabit(user.id, habitId, {
-        title,
-        period,
-      });
+      const updatedHabit = await updateHabit(user.id, habitId, habitData);
       setHabits(currentHabits =>
         currentHabits.map(habit =>
-          habit.id === habitId ? updatedHabit : habit,
+          habit.id === habitId
+            ? { ...updatedHabit, currentStreak: habit.currentStreak }
+            : habit,
         ),
       );
       return true;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Tente novamente.';
+      const message =
+        error instanceof Error ? error.message : 'Tente novamente.';
       Alert.alert('Erro', message);
       return false;
     }
@@ -114,13 +154,20 @@ function AppNavigator() {
         setCheckins(currentCheckins =>
           currentCheckins.filter(item => item.id !== checkin.id),
         );
+        await refreshStreaks();
         return;
       }
 
-      const createdCheckin = await createCheckin(user.id, habitId, selectedDate);
+      const createdCheckin = await createCheckin(
+        user.id,
+        habitId,
+        selectedDate,
+      );
       setCheckins(currentCheckins => [...currentCheckins, createdCheckin]);
+      await refreshStreaks();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Tente novamente.';
+      const message =
+        error instanceof Error ? error.message : 'Tente novamente.';
       Alert.alert('Erro', message);
     }
   }
@@ -140,7 +187,8 @@ function AppNavigator() {
       );
       return true;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Tente novamente.';
+      const message =
+        error instanceof Error ? error.message : 'Tente novamente.';
       Alert.alert('Erro', message);
       return false;
     }
@@ -227,8 +275,8 @@ function AppNavigator() {
                     selectedDate={selectedDate}
                     onBack={() => navigation.goBack()}
                     onToggleHabit={() => toggleHabit(selectedHabit.id)}
-                    onUpdateHabit={(title, period) =>
-                      saveHabitChanges(selectedHabit.id, title, period)
+                    onUpdateHabit={habit =>
+                      saveHabitChanges(selectedHabit.id, habit)
                     }
                     onDeleteHabit={() => removeHabit(selectedHabit.id)}
                   />

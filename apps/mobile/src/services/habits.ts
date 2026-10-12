@@ -2,6 +2,7 @@ import {
   CreateHabitData,
   DashboardData,
   HabitCheckin,
+  UpdateHabitData,
   UserHabit,
 } from '../types/habit';
 import { API_URL } from './auth';
@@ -21,7 +22,7 @@ export async function getHabits(userId: number): Promise<UserHabit[]> {
 }
 
 export async function getDashboard(userId: number): Promise<DashboardData> {
-  const response = await fetch(API_URL + '/dashboard', {
+  const response = await fetch(API_URL + '/habits/dashboard', {
     headers: { 'x-user-id': String(userId) },
   });
 
@@ -50,7 +51,9 @@ export async function createHabit(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    const message = Array.isArray(data.message) ? data.message[0] : data.message;
+    const message = Array.isArray(data.message)
+      ? data.message[0]
+      : data.message;
     throw new Error(message || 'Não foi possível criar o hábito');
   }
 
@@ -60,7 +63,7 @@ export async function createHabit(
 export async function updateHabit(
   userId: number,
   habitId: number,
-  habit: Pick<CreateHabitData, 'title' | 'period'>,
+  habit: UpdateHabitData,
 ): Promise<UserHabit> {
   const response = await fetch(API_URL + '/habits/' + habitId, {
     method: 'PATCH',
@@ -104,17 +107,14 @@ export async function createCheckin(
   habitId: number,
   date: string,
 ): Promise<HabitCheckin> {
-  const response = await fetch(
-    API_URL + '/habits/' + habitId + '/checkins',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': String(userId),
-      },
-      body: JSON.stringify({ date }),
+  const response = await fetch(API_URL + '/habits/' + habitId + '/checkins', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': String(userId),
     },
-  );
+    body: JSON.stringify({ date }),
+  });
 
   const data = await response.json().catch(() => ({}));
 

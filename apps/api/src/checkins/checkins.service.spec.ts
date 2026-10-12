@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Habit } from '../habits/entities/habit.entity';
 import { Checkin } from './entities/checkin.entity';
 import { CheckinsService } from './checkins.service';
@@ -20,6 +24,8 @@ describe('CheckinsService', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CheckinsService,
@@ -68,6 +74,14 @@ describe('CheckinsService', () => {
     await expect(
       service.create(1, { date: '2026-10-09' }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('deve retornar 400 para check-in fora dos dias do hábito', async () => {
+    habitsRepository.findOneBy.mockResolvedValue({ id: 1, weekDays: [0] });
+
+    await expect(
+      service.create(1, { date: '2026-10-13' }, 1),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('deve consultar os check-ins de um hábito', async () => {

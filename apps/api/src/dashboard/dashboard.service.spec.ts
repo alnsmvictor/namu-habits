@@ -11,6 +11,8 @@ describe('DashboardService', () => {
   const checkinsRepository = { findBy: jest.fn() };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DashboardService,
@@ -30,8 +32,18 @@ describe('DashboardService', () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-10-09T12:00:00.000Z'));
 
     habitsRepository.findBy.mockResolvedValue([
-      { id: 1, title: 'Caminhada', frequency: 'diário' },
-      { id: 2, title: 'Refeição saudável', frequency: 'semanal' },
+      {
+        id: 1,
+        title: 'Caminhada',
+        frequency: 'diário',
+        weekDays: [0, 1, 2, 3, 4, 5, 6],
+      },
+      {
+        id: 2,
+        title: 'Refeição saudável',
+        frequency: 'semanal',
+        weekDays: [4],
+      },
     ]);
     checkinsRepository.findBy.mockResolvedValue([
       { habitId: 1, date: '2026-10-07' },
@@ -58,6 +70,51 @@ describe('DashboardService', () => {
       ],
     });
 
+    jest.useRealTimers();
+  });
+
+  it('deve ignorar dias fora da rotina ao calcular o streak', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-10-12T12:00:00.000Z'));
+
+    habitsRepository.findBy.mockResolvedValue([
+      {
+        id: 1,
+        title: 'Leitura',
+        frequency: 'semanal',
+        weekDays: [0, 2, 4],
+      },
+    ]);
+    checkinsRepository.findBy.mockResolvedValue([
+      { habitId: 1, date: '2026-10-07' },
+      { habitId: 1, date: '2026-10-09' },
+      { habitId: 1, date: '2026-10-12' },
+    ]);
+
+    const dashboard = await service.getDashboard(1);
+
+    expect(dashboard.habits[0].currentStreak).toBe(3);
+    jest.useRealTimers();
+  });
+
+  it('deve ignorar check-ins antigos fora da rotina', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-10-09T12:00:00.000Z'));
+
+    habitsRepository.findBy.mockResolvedValue([
+      {
+        id: 1,
+        title: 'Leitura',
+        frequency: 'semanal',
+        weekDays: [0],
+      },
+    ]);
+    checkinsRepository.findBy.mockResolvedValue([
+      { habitId: 1, date: '2026-10-09' },
+    ]);
+
+    const dashboard = await service.getDashboard(1);
+
+    expect(dashboard.weeklyCompletionPercentage).toBe(0);
+    expect(dashboard.weekDays.at(-1)?.completed).toBe(false);
     jest.useRealTimers();
   });
 });

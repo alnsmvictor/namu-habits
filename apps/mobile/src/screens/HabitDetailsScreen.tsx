@@ -11,7 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons/static';
 import { fontFamily, fontSize } from '../styles/typography';
-import { HabitCheckin, HabitPeriod, UserHabit } from '../types/habit';
+import {
+  HabitCheckin,
+  HabitPeriod,
+  UpdateHabitData,
+  UserHabit,
+} from '../types/habit';
 
 type Props = {
   habit: UserHabit;
@@ -19,13 +24,19 @@ type Props = {
   selectedDate: string;
   onBack: () => void;
   onToggleHabit: () => void;
-  onUpdateHabit: (title: string, period: HabitPeriod) => Promise<boolean>;
+  onUpdateHabit: (habit: UpdateHabitData) => Promise<boolean>;
   onDeleteHabit: () => Promise<boolean>;
 };
 
 const periods: HabitPeriod[] = ['MANHA', 'TARDE', 'NOITE'];
 const labels = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 const weekDayLabels = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+const categories = [
+  { icon: 'self-improvement', value: 'mental' },
+  { icon: 'water-drop', value: 'sa\u00fade' },
+  { icon: 'fitness-center', value: 'exerc\u00edcio' },
+  { icon: 'restaurant', value: 'alimenta\u00e7\u00e3o' },
+] as const;
 
 function dateKey(date: Date) {
   return [
@@ -33,6 +44,11 @@ function dateKey(date: Date) {
     String(date.getMonth() + 1).padStart(2, '0'),
     String(date.getDate()).padStart(2, '0'),
   ].join('-');
+}
+
+function getWeekDayIndex(date: string) {
+  const day = new Date(`${date}T12:00:00`).getDay();
+  return day === 0 ? 6 : day - 1;
 }
 
 function HabitDetailsScreen(props: Props) {
@@ -47,7 +63,10 @@ function HabitDetailsScreen(props: Props) {
   } = props;
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(habit.title);
+  const [description, setDescription] = useState(habit.description ?? '');
   const [period, setPeriod] = useState<HabitPeriod>(habit.period);
+  const [category, setCategory] = useState(habit.category);
+  const [days, setDays] = useState(habit.weekDays);
   const dates = checkins.map(checkin => checkin.date);
   const today = new Date();
   const week = Array.from({ length: 7 }, (_, index) => {
@@ -66,6 +85,8 @@ function HabitDetailsScreen(props: Props) {
       100,
   );
   const completed = dates.includes(selectedDate);
+  const isHabitDay = habit.weekDays.includes(getWeekDayIndex(selectedDate));
+  const canToggleHabit = isHabitDay || completed;
   const schedule = habit.weekDays.map(day => weekDayLabels[day]).join(', ');
   const daysInMonth = new Date(
     today.getFullYear(),
@@ -74,9 +95,32 @@ function HabitDetailsScreen(props: Props) {
   ).getDate();
 
   async function save() {
-    if (title.trim() && (await onUpdateHabit(title.trim(), period))) {
+    if (!title.trim() || days.length === 0) {
+      Alert.alert('Atenção', 'Informe um nome e ao menos um dia da semana.');
+      return;
+    }
+
+    if (
+      await onUpdateHabit({
+        title: title.trim(),
+        description: description.trim(),
+        period,
+        category,
+        weekDays: days,
+        frequency:
+          days.length === weekDayLabels.length ? 'di\u00e1rio' : 'semanal',
+      })
+    ) {
       setEditing(false);
     }
+  }
+
+  function toggleDay(day: number) {
+    setDays(currentDays =>
+      currentDays.includes(day)
+        ? currentDays.filter(item => item !== day)
+        : [...currentDays, day],
+    );
   }
 
   function remove() {
@@ -94,13 +138,41 @@ function HabitDetailsScreen(props: Props) {
     return (
       <SafeAreaView style={styles.safe}>
         <Header title="Editar Hábito" onBack={() => setEditing(false)} />
-        <View style={styles.edit}>
+        <ScrollView
+          contentContainerStyle={styles.edit}
+          overScrollMode="never"
+          bounces={false}
+          alwaysBounceVertical={false}
+        >
           <Text style={styles.label}>NOME DO HÁBITO</Text>
           <TextInput
             style={styles.input}
             value={title}
             onChangeText={setTitle}
           />
+          <Text style={styles.label}>DESCRIÇÃO</Text>
+          <TextInput
+            style={styles.descriptionInput}
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            textAlignVertical="top"
+          />
+          <Text style={styles.label}>CATEGORIA</Text>
+          <View style={styles.categories}>
+            {categories.map(item => (
+              <Pressable
+                key={item.value}
+                onPress={() => setCategory(item.value)}
+                style={[
+                  styles.categoryButton,
+                  category === item.value && styles.selected,
+                ]}
+              >
+                <MaterialIcons name={item.icon} size={22} color="#17302a" />
+              </Pressable>
+            ))}
+          </View>
           <Text style={styles.label}>PERÍODO DO DIA</Text>
           <View style={styles.periods}>
             {periods.map(item => (
@@ -116,6 +188,30 @@ function HabitDetailsScreen(props: Props) {
               </Pressable>
             ))}
           </View>
+          <Text style={styles.label}>FREQUÊNCIA SEMANAL</Text>
+          <View style={styles.weekDays}>
+            {weekDayLabels.map((day, index) => (
+              <Pressable
+                key={day}
+                onPress={() => toggleDay(index)}
+                style={styles.weekDayButton}
+              >
+                <Text numberOfLines={1} style={styles.weekDayText}>
+                  {day}
+                </Text>
+                <View
+                  style={[
+                    styles.weekDayCircle,
+                    days.includes(index) && styles.weekDayCircleSelected,
+                  ]}
+                >
+                  {days.includes(index) && (
+                    <MaterialIcons name="check" size={14} color="#ffffff" />
+                  )}
+                </View>
+              </Pressable>
+            ))}
+          </View>
           <Pressable style={styles.save} onPress={save}>
             <Text style={styles.saveText}>Salvar alterações</Text>
           </Pressable>
@@ -123,7 +219,7 @@ function HabitDetailsScreen(props: Props) {
             <MaterialIcons name="delete-outline" size={20} color="#be3a3a" />
             <Text style={styles.deleteText}>Excluir hábito</Text>
           </Pressable>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -199,7 +295,10 @@ function HabitDetailsScreen(props: Props) {
         <View style={styles.stats}>
           <Stat value={String(checkins.length)} label="Total de sessões" />
           <Stat value={successRate + '%'} label="Taxa de êxito" />
-          <Stat value={String(weekDone)} label="Dias na semana" />
+          <Stat
+            value={String(habit.currentStreak ?? 0)}
+            label="Dias seguidos"
+          />
         </View>
         <Section title="HISTÓRICO MENSAL" detail="Mês atual" />
         <View style={styles.card}>
@@ -228,14 +327,22 @@ function HabitDetailsScreen(props: Props) {
         </View>
       </ScrollView>
       <View style={styles.footer}>
-        <Pressable style={styles.complete} onPress={onToggleHabit}>
+        <Pressable
+          disabled={!canToggleHabit}
+          style={[styles.complete, !canToggleHabit && styles.completeDisabled]}
+          onPress={onToggleHabit}
+        >
           <MaterialIcons
             name={completed ? 'task-alt' : 'radio-button-unchecked'}
             size={20}
             color="#083e33"
           />
           <Text style={styles.completeText}>
-            {completed ? 'Desmarcar hábito' : 'Concluir hábito'}
+            {completed
+              ? 'Desmarcar hábito'
+              : isHabitDay
+              ? 'Concluir hábito'
+              : 'Hábito não programado'}
           </Text>
         </Pressable>
       </View>
@@ -471,6 +578,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#23d6af',
     elevation: 4,
   },
+  completeDisabled: {
+    backgroundColor: '#d7e6e2',
+    elevation: 0,
+  },
   completeText: {
     fontFamily: fontFamily.body,
     fontSize: fontSize.body,
@@ -496,6 +607,29 @@ const styles = StyleSheet.create({
     color: '#18231f',
     elevation: 2,
   },
+  descriptionInput: {
+    minHeight: 76,
+    padding: 14,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.body,
+    color: '#18231f',
+    elevation: 2,
+  },
+  categories: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  categoryButton: {
+    width: 52,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    elevation: 2,
+  },
   periods: { flexDirection: 'row', justifyContent: 'space-between' },
   periodButton: {
     width: '31%',
@@ -517,6 +651,32 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#687773',
   },
+  weekDays: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    elevation: 2,
+  },
+  weekDayButton: { width: '14.28%', alignItems: 'center' },
+  weekDayText: {
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.small,
+    fontWeight: '700',
+    color: '#687773',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  weekDayCircle: {
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 11,
+    backgroundColor: '#e7edeb',
+  },
+  weekDayCircleSelected: { backgroundColor: '#6ae3c6' },
   save: {
     height: 52,
     alignItems: 'center',
