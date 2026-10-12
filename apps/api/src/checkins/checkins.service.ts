@@ -18,8 +18,15 @@ export class CheckinsService {
     private readonly habitsRepository: Repository<Habit>,
   ) {}
 
-  async create(habitId: number, dto: CreateCheckinDto): Promise<Checkin> {
-    const habit = await this.habitsRepository.findOneBy({ id: habitId });
+  async create(
+    habitId: number,
+    dto: CreateCheckinDto,
+    userId: number,
+  ): Promise<Checkin> {
+    const habit = await this.habitsRepository.findOneBy({
+      id: habitId,
+      userId,
+    });
 
     if (!habit) {
       throw new NotFoundException('Hábito não encontrado');
@@ -42,8 +49,11 @@ export class CheckinsService {
     return this.checkinsRepository.save(checkin);
   }
 
-  async findAllByHabit(habitId: number): Promise<Checkin[]> {
-    const habit = await this.habitsRepository.findOneBy({ id: habitId });
+  async findAllByHabit(habitId: number, userId: number): Promise<Checkin[]> {
+    const habit = await this.habitsRepository.findOneBy({
+      id: habitId,
+      userId,
+    });
 
     if (!habit) {
       throw new NotFoundException('Hábito não encontrado');

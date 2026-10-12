@@ -1,11 +1,14 @@
 @baseUrl = http://localhost:3001
+@userId = 1
 
 GET {{baseUrl}}/habits/3/checkins
+x-user-id: {{userId}}
 
 ###
 
 POST {{baseUrl}}/habits/2/checkins
 Content-Type: application/json
+x-user-id: {{userId}}
 
 {
   "date": "2026-10-09",
@@ -16,6 +19,7 @@ Content-Type: application/json
 
 POST {{baseUrl}}/habits/999/checkins
 Content-Type: application/json
+x-user-id: {{userId}}
 
 {
   "date": "2026-10-09"

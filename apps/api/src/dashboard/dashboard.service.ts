@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Checkin } from '../checkins/entities/checkin.entity';
 import { Habit } from '../habits/entities/habit.entity';
 
@@ -19,11 +19,12 @@ export class DashboardService {
     private readonly checkinsRepository: Repository<Checkin>,
   ) {}
 
-  async getDashboard() {
-    const [habits, checkins] = await Promise.all([
-      this.habitsRepository.find(),
-      this.checkinsRepository.find(),
-    ]);
+  async getDashboard(userId: number) {
+    const habits = await this.habitsRepository.findBy({ userId });
+    const habitIds = habits.map((habit) => habit.id);
+    const checkins = habitIds.length
+      ? await this.checkinsRepository.findBy({ habitId: In(habitIds) })
+      : [];
 
     const checkinsByHabit = new Map<number, Set<string>>();
 

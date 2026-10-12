@@ -1,15 +1,19 @@
 @baseUrl = http://localhost:3001
+@userId = 1
 
 GET {{baseUrl}}/habits
+x-user-id: {{userId}}
 
 ###
 
 GET {{baseUrl}}/habits/1
+x-user-id: {{userId}}
 
 ###
 
 POST {{baseUrl}}/habits
 Content-Type: application/json
+x-user-id: {{userId}}
 
 {
   "title": "Beber água",
@@ -22,6 +26,7 @@ Content-Type: application/json
 
 PATCH {{baseUrl}}/habits/1
 Content-Type: application/json
+x-user-id: {{userId}}
 
 {
   "title": "Meditação matinal",
@@ -31,3 +36,4 @@ Content-Type: application/json
 ###
 
 DELETE {{baseUrl}}/habits/1
+x-user-id: {{userId}}

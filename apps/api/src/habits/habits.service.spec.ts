@@ -7,7 +7,7 @@ describe('HabitsService', () => {
   let service: HabitsService;
 
   const repositoryMock = {
-    find: jest.fn(),
+    findBy: jest.fn(),
     findOneBy: jest.fn(),
     delete: jest.fn(),
     create: jest.fn(),
@@ -36,12 +36,12 @@ describe('HabitsService', () => {
       { id: 2, title: 'Caminhada' },
     ];
 
-    repositoryMock.find.mockResolvedValue(habits);
+    repositoryMock.findBy.mockResolvedValue(habits);
 
-    const result = await service.findAll();
+    const result = await service.findAll(1);
 
     expect(result).toEqual(habits);
-    expect(repositoryMock.find).toHaveBeenCalledTimes(1);
+    expect(repositoryMock.findBy).toHaveBeenCalledWith({ userId: 1 });
   });
 
   it('deve criar um hábito', async () => {
@@ -53,13 +53,13 @@ describe('HabitsService', () => {
 
     const habit = { id: 1, ...dto };
 
-    repositoryMock.create.mockReturnValue(dto);
+    repositoryMock.create.mockReturnValue({ ...dto, userId: 1 });
     repositoryMock.save.mockResolvedValue(habit);
 
-    const result = await service.create(dto);
+    const result = await service.create(dto, 1);
 
-    expect(repositoryMock.create).toHaveBeenCalledWith(dto);
-    expect(repositoryMock.save).toHaveBeenCalledWith(dto);
+    expect(repositoryMock.create).toHaveBeenCalledWith({ ...dto, userId: 1 });
+    expect(repositoryMock.save).toHaveBeenCalledWith({ ...dto, userId: 1 });
     expect(result).toEqual(habit);
   });
 
@@ -68,9 +68,9 @@ describe('HabitsService', () => {
 
     repositoryMock.findOneBy.mockResolvedValue(habit);
 
-    const result = await service.findOne(1);
+    const result = await service.findOne(1, 1);
 
-    expect(repositoryMock.findOneBy).toHaveBeenCalledWith({ id: 1 });
+    expect(repositoryMock.findOneBy).toHaveBeenCalledWith({ id: 1, userId: 1 });
     expect(result).toEqual(habit);
   });
 
@@ -87,7 +87,7 @@ describe('HabitsService', () => {
     repositoryMock.findOneBy.mockResolvedValue(habit);
     repositoryMock.save.mockResolvedValue({ ...habit, ...dto });
 
-    const result = await service.update(1, dto);
+    const result = await service.update(1, dto, 1);
 
     expect(repositoryMock.save).toHaveBeenCalledWith({ ...habit, ...dto });
     expect(result).toEqual({ ...habit, ...dto });
@@ -107,7 +107,7 @@ describe('HabitsService', () => {
     repositoryMock.findOneBy.mockResolvedValue(habit);
     repositoryMock.delete.mockResolvedValue({ affected: 1 });
 
-    const result = await service.remove(1);
+    const result = await service.remove(1, 1);
 
     expect(repositoryMock.delete).toHaveBeenCalledWith(1);
     expect(result).toEqual({ message: 'Hábito excluído com sucesso' });

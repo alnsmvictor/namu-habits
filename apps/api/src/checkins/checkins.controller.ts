@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Param,
   ParseIntPipe,
   Post,
@@ -14,15 +15,19 @@ export class CheckinsController {
   constructor(private readonly checkinsService: CheckinsService) {}
 
   @Get()
-  findAll(@Param('habitId', ParseIntPipe) habitId: number) {
-    return this.checkinsService.findAllByHabit(habitId);
+  findAll(
+    @Param('habitId', ParseIntPipe) habitId: number,
+    @Headers('x-user-id') userId: string,
+  ) {
+    return this.checkinsService.findAllByHabit(habitId, Number(userId));
   }
 
   @Post()
   create(
     @Param('habitId', ParseIntPipe) habitId: number,
     @Body() dto: CreateCheckinDto,
+    @Headers('x-user-id') userId: string,
   ) {
-    return this.checkinsService.create(habitId, dto);
+    return this.checkinsService.create(habitId, dto, Number(userId));
   }
 }

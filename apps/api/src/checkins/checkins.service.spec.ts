@@ -44,7 +44,7 @@ describe('CheckinsService', () => {
     checkinsRepository.create.mockReturnValue(checkin);
     checkinsRepository.save.mockResolvedValue(checkin);
 
-    const result = await service.create(1, dto);
+    const result = await service.create(1, dto, 1);
 
     expect(checkinsRepository.create).toHaveBeenCalledWith({
       habitId: 1,
@@ -76,7 +76,7 @@ describe('CheckinsService', () => {
     habitsRepository.findOneBy.mockResolvedValue({ id: 1 });
     checkinsRepository.find.mockResolvedValue(checkins);
 
-    const result = await service.findAllByHabit(1);
+    const result = await service.findAllByHabit(1, 1);
 
     expect(checkinsRepository.find).toHaveBeenCalledWith({
       where: { habitId: 1 },

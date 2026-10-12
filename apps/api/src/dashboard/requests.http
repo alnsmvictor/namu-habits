@@ -1,3 +1,5 @@
 @baseUrl = http://localhost:3001
+@userId = 1
 
 GET {{baseUrl}}/dashboard
+x-user-id: {{userId}}

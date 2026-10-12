@@ -7,8 +7,8 @@ import { DashboardService } from './dashboard.service';
 describe('DashboardService', () => {
   let service: DashboardService;
 
-  const habitsRepository = { find: jest.fn() };
-  const checkinsRepository = { find: jest.fn() };
+  const habitsRepository = { findBy: jest.fn() };
+  const checkinsRepository = { findBy: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,18 +29,18 @@ describe('DashboardService', () => {
   it('deve calcular o resumo do dashboard', async () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-10-09T12:00:00.000Z'));
 
-    habitsRepository.find.mockResolvedValue([
+    habitsRepository.findBy.mockResolvedValue([
       { id: 1, title: 'Caminhada', frequency: 'diário' },
       { id: 2, title: 'Refeição saudável', frequency: 'semanal' },
     ]);
-    checkinsRepository.find.mockResolvedValue([
+    checkinsRepository.findBy.mockResolvedValue([
       { habitId: 1, date: '2026-10-07' },
       { habitId: 1, date: '2026-10-08' },
       { habitId: 1, date: '2026-10-09' },
       { habitId: 2, date: '2026-10-09' },
     ]);
 
-    await expect(service.getDashboard()).resolves.toEqual({
+    await expect(service.getDashboard(1)).resolves.toEqual({
       totalHabits: 2,
       weeklyCompletionPercentage: 50,
       habits: [

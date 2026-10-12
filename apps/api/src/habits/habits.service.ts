@@ -12,12 +12,12 @@ export class HabitsService {
     private readonly habitsRepository: Repository<Habit>,
   ) {}
 
-  findAll(): Promise<Habit[]> {
-    return this.habitsRepository.find();
+  findAll(userId: number): Promise<Habit[]> {
+    return this.habitsRepository.findBy({ userId });
   }
 
-  async findOne(id: number): Promise<Habit> {
-    const habit = await this.habitsRepository.findOneBy({ id });
+  async findOne(id: number, userId: number): Promise<Habit> {
+    const habit = await this.habitsRepository.findOneBy({ id, userId });
 
     if (!habit) {
       throw new NotFoundException('Hábito não encontrado');
@@ -26,20 +26,24 @@ export class HabitsService {
     return habit;
   }
 
-  async create(dto: CreateHabitDto): Promise<Habit> {
-    const habit = this.habitsRepository.create(dto);
+  async create(dto: CreateHabitDto, userId: number): Promise<Habit> {
+    const habit = this.habitsRepository.create({ ...dto, userId });
     return this.habitsRepository.save(habit);
   }
 
-  async update(id: number, dto: UpdateHabitDto): Promise<Habit> {
-    const habit = await this.findOne(id);
+  async update(
+    id: number,
+    dto: UpdateHabitDto,
+    userId: number,
+  ): Promise<Habit> {
+    const habit = await this.findOne(id, userId);
     Object.assign(habit, dto);
 
     return this.habitsRepository.save(habit);
   }
 
-  async remove(id: number): Promise<{ message: string }> {
-    await this.findOne(id);
+  async remove(id: number, userId: number): Promise<{ message: string }> {
+    await this.findOne(id, userId);
     await this.habitsRepository.delete(id);
 
     return { message: 'Hábito excluído com sucesso' };

@@ -2,8 +2,10 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Habit } from '../../habits/entities/habit.entity';
 
 @Entity('users')
 export class User {
@@ -21,4 +23,7 @@ export class User {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @OneToMany(() => Habit, (habit) => habit.user)
+  habits: Habit[];
 }

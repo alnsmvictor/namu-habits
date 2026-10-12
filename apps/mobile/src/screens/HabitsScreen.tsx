@@ -10,15 +10,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons/static';
 import HabitCard from '../components/HabitCard';
 import { fontFamily, fontSize } from '../styles/typography';
-import { Habit } from '../types/habit';
+import { UserHabit } from '../types/habit';
 
 type Props = {
-  habits: Habit[];
+  habits: UserHabit[];
   onBack: () => void;
-  onOpenHabit: (id: number) => void;
 };
 
-function HabitsScreen({ habits, onBack, onOpenHabit }: Props) {
+function HabitsScreen({ habits, onBack }: Props) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
@@ -38,13 +37,11 @@ function HabitsScreen({ habits, onBack, onOpenHabit }: Props) {
           style={styles.subtitle}
         >{`${habits.length} h\u00e1bitos cadastrados`}</Text>
         <View style={styles.list}>
-          {habits.map(habit => (
-            <HabitCard
-              key={habit.id}
-              habit={habit}
-              onPress={() => onOpenHabit(habit.id)}
-            />
-          ))}
+          {habits.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum hábito cadastrado ainda.</Text>
+          ) : (
+            habits.map(habit => <HabitCard key={habit.id} habit={habit} />)
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -93,6 +90,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   list: { marginTop: 22 },
+  emptyText: {
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.body,
+    color: '#74807d',
+  },
 });
 
 export default HabitsScreen;

@@ -2,15 +2,21 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Checkin } from '../../checkins/entities/checkin.entity';
+import { User } from '../../auth/entities/user.entity';
 
 @Entity('habits')
 export class Habit {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ name: 'user_id', nullable: true })
+  userId: number | null;
 
   @Column({ length: 255 })
   title: string;
@@ -32,4 +38,8 @@ export class Habit {
 
   @OneToMany(() => Checkin, (checkin) => checkin.habit)
   checkins: Checkin[];
+
+  @ManyToOne(() => User, (user) => user.habits, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 }

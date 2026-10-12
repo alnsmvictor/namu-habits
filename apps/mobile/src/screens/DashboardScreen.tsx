@@ -12,32 +12,15 @@ import { MaterialIcons } from '@react-native-vector-icons/material-icons/static'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HabitCard from '../components/HabitCard';
 import { fontFamily, fontSize } from '../styles/typography';
-import { Habit, HabitPeriod } from '../types/habit';
+import { UserHabit } from '../types/habit';
 
 type DashboardScreenProps = {
-  habits: Habit[];
+  habits: UserHabit[];
   userName: string;
   onLogout: () => void;
   onCreateHabit: () => void;
   onOpenHabits: () => void;
-  onToggleHabit: (id: number) => void;
 };
-
-const weekDays = [
-  { day: 'SEG', completed: true },
-  { day: 'TER', completed: true },
-  { day: 'QUA', completed: true },
-  { day: 'QUI', selected: true },
-  { day: 'SEX' },
-  { day: 'SAB' },
-  { day: 'DOM' },
-];
-
-const periods: { key: HabitPeriod; label: string }[] = [
-  { key: 'MANHA', label: 'MANHA' },
-  { key: 'TARDE', label: 'TARDE' },
-  { key: 'NOITE', label: 'NOITE' },
-];
 
 const navigationItems = [
   { label: 'Geral', icon: 'home' },
@@ -52,11 +35,8 @@ function DashboardScreen({
   onLogout,
   onCreateHabit,
   onOpenHabits,
-  onToggleHabit,
 }: DashboardScreenProps) {
   const [selectedTab, setSelectedTab] = useState('Geral');
-  const completedHabits = habits.filter(habit => habit.completed).length;
-  const progress = completedHabits / habits.length;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -82,61 +62,20 @@ function DashboardScreen({
       >
         <Text style={styles.greeting}>Bem vindo, {userName}</Text>
 
-        <View style={styles.weekCard}>
-          {weekDays.map(day => (
-            <View
-              key={day.day}
-              style={[styles.dayItem, day.selected && styles.dayItemSelected]}
-            >
-              <Text
-                style={[styles.dayText, day.selected && styles.dayTextSelected]}
-              >
-                {day.day}
-              </Text>
-              {day.completed ? (
-                <View style={styles.dayCompleted}>
-                  <MaterialIcons name="check" size={13} color="#42cdb0" />
-                </View>
-              ) : (
-                <View style={styles.dayDot} />
-              )}
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressText}>
-            {`${Math.round(progress * 100)}% Conclu\u00eddo`}
-          </Text>
+        <View style={styles.listHeader}>
+          <Text style={styles.periodTitle}>SEUS HÁBITOS</Text>
           <View style={styles.counterBadge}>
-            <Text style={styles.counterText}>
-              {`${completedHabits} de ${habits.length} H\u00e1bitos`}
-            </Text>
+            <Text style={styles.counterText}>{`${habits.length} cadastrados`}</Text>
           </View>
-        </View>
-        <View style={styles.progressTrack}>
-          <View
-            style={[styles.progressFill, { width: `${progress * 100}%` }]}
-          />
         </View>
 
-        {periods.map(period => (
-          <View key={period.key} style={styles.period}>
-            <View style={styles.periodTitleWrap}>
-              <Text style={styles.periodTitle}>{period.label}</Text>
-              <View style={styles.periodLine} />
-            </View>
-            {habits
-              .filter(habit => habit.period === period.key)
-              .map(habit => (
-                <HabitCard
-                  key={habit.id}
-                  habit={habit}
-                  onPress={() => onToggleHabit(habit.id)}
-                />
-              ))}
-          </View>
-        ))}
+        {habits.length === 0 ? (
+          <Text style={styles.emptyText}>
+            Você ainda não possui hábitos cadastrados.
+          </Text>
+        ) : (
+          habits.map(habit => <HabitCard key={habit.id} habit={habit} />)
+        )}
       </ScrollView>
 
       <View style={styles.bottomNav}>
@@ -243,56 +182,11 @@ const styles = StyleSheet.create({
     color: '#090909',
     marginBottom: 13,
   },
-  weekCard: {
-    height: 62,
-    paddingHorizontal: 7,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 9,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 7,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  dayItem: {
-    width: 38,
-    height: 47,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-  },
-  dayItemSelected: { borderWidth: 2, borderColor: '#8ae9d5' },
-  dayText: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.small,
-    fontWeight: '700',
-    color: '#9b9b9b',
-    marginBottom: 4,
-  },
-  dayTextSelected: { color: '#5e5e5e' },
-  dayCompleted: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#d4f8ef',
-  },
-  dayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#d8d8d8' },
-  progressHeader: {
+  listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  progressText: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.small,
-    color: '#a0a0a0',
+    marginBottom: 14,
   },
   counterBadge: {
     paddingHorizontal: 11,
@@ -306,25 +200,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#199e85',
   },
-  progressTrack: {
-    height: 8,
-    overflow: 'hidden',
-    borderRadius: 5,
-    backgroundColor: '#dedede',
-  },
-  progressFill: { height: '100%', borderRadius: 5, backgroundColor: '#49e0be' },
-  period: { marginTop: 17 },
-  periodTitleWrap: { alignSelf: 'flex-start', marginLeft: 3, marginBottom: 10 },
   periodTitle: {
     fontFamily: fontFamily.heading,
     fontSize: fontSize.subtitle,
     color: '#111111',
   },
-  periodLine: {
-    width: 29,
-    height: 2,
-    marginTop: 3,
-    backgroundColor: '#111111',
+  emptyText: {
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.body,
+    color: '#72807c',
+    lineHeight: 22,
   },
   bottomNav: {
     position: 'absolute',

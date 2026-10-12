@@ -1,11 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@react-native-vector-icons/material-icons/static';
 import { fontFamily, fontSize } from '../styles/typography';
-import { Habit } from '../types/habit';
+import { UserHabit } from '../types/habit';
 
 type HabitCardProps = {
-  habit: Habit;
-  onPress: () => void;
+  habit: UserHabit;
+  onPress?: () => void;
 };
 
 function HabitCard({ habit, onPress }: HabitCardProps) {
@@ -15,10 +15,8 @@ function HabitCard({ habit, onPress }: HabitCardProps) {
         <MaterialIcons name="self-improvement" size={24} color="#08231c" />
       </View>
       <Text style={styles.title}>{habit.title}</Text>
-      <View style={[styles.check, habit.completed && styles.checkDone]}>
-        {habit.completed && (
-          <MaterialIcons name="check" size={22} color="#ffffff" />
-        )}
+      <View style={styles.category}>
+        <Text style={styles.categoryText}>{habit.category}</Text>
       </View>
     </Pressable>
   );
@@ -55,6 +53,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#080808',
   },
+  category: {
+    maxWidth: 80,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
+    backgroundColor: '#e8f8f3',
+  },
+  categoryText: {
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.small,
+    color: '#267b6c',
+    textTransform: 'capitalize',
+  },
   check: {
     width: 36,
     height: 36,
@@ -65,7 +76,6 @@ const styles = StyleSheet.create({
     borderColor: '#e1e1e1',
     backgroundColor: '#f3f3f3',
   },
-  checkDone: { borderColor: '#000000', backgroundColor: '#000000' },
 });
 
 export default HabitCard;

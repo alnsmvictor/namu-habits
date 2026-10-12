@@ -9,7 +9,7 @@ export type AuthResponse = {
   user: AuthUser;
 };
 
-const API_URL = 'http://10.0.2.2:3001';
+export const API_URL = 'http://10.0.2.2:3001';
 
 async function request(path: string, body: object): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}${path}`, {
