@@ -23,6 +23,9 @@ function ChangePasswordScreen({ onBack, onChangePassword }: Props) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -72,30 +75,82 @@ function ChangePasswordScreen({ onBack, onChangePassword }: Props) {
           Confirme sua senha atual para criar uma nova.
         </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Senha atual"
-          placeholderTextColor="#8c9794"
-          secureTextEntry
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Nova senha"
-          placeholderTextColor="#8c9794"
-          secureTextEntry
-          value={newPassword}
-          onChangeText={setNewPassword}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirmar nova senha"
-          placeholderTextColor="#8c9794"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
+        <View style={styles.passwordField}>
+          <TextInput
+            style={[styles.input, styles.passwordInput]}
+            placeholder="Senha atual"
+            placeholderTextColor="#8c9794"
+            secureTextEntry={!showCurrentPassword}
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+          />
+          <Pressable
+            style={styles.eyeButton}
+            onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              showCurrentPassword
+                ? 'Ocultar senha atual'
+                : 'Mostrar senha atual'
+            }
+          >
+            <MaterialIcons
+              name={showCurrentPassword ? 'visibility-off' : 'visibility'}
+              size={22}
+              color="#60716d"
+            />
+          </Pressable>
+        </View>
+        <View style={styles.passwordField}>
+          <TextInput
+            style={[styles.input, styles.passwordInput]}
+            placeholder="Nova senha"
+            placeholderTextColor="#8c9794"
+            secureTextEntry={!showNewPassword}
+            value={newPassword}
+            onChangeText={setNewPassword}
+          />
+          <Pressable
+            style={styles.eyeButton}
+            onPress={() => setShowNewPassword(!showNewPassword)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              showNewPassword ? 'Ocultar nova senha' : 'Mostrar nova senha'
+            }
+          >
+            <MaterialIcons
+              name={showNewPassword ? 'visibility-off' : 'visibility'}
+              size={22}
+              color="#60716d"
+            />
+          </Pressable>
+        </View>
+        <View style={styles.passwordField}>
+          <TextInput
+            style={[styles.input, styles.passwordInput]}
+            placeholder="Confirmar nova senha"
+            placeholderTextColor="#8c9794"
+            secureTextEntry={!showConfirmPassword}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
+          <Pressable
+            style={styles.eyeButton}
+            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              showConfirmPassword
+                ? 'Ocultar confirmacao de senha'
+                : 'Mostrar confirmacao de senha'
+            }
+          >
+            <MaterialIcons
+              name={showConfirmPassword ? 'visibility-off' : 'visibility'}
+              size={22}
+              color="#60716d"
+            />
+          </Pressable>
+        </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -168,6 +223,21 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.body,
     fontSize: fontSize.body,
     color: '#15211e',
+  },
+  passwordField: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 54,
+    height: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   error: {
     fontFamily: fontFamily.body,

@@ -107,28 +107,20 @@ npm run lint
 npm test
 ```
 
-## APK de debug
+## Demonstracao
 
-Antes de gerar um APK para instalar em um celular, a API precisa estar
-publicada ou acessivel pela rede local. O endereco 10.0.2.2 funciona apenas
-no emulador Android. Ajuste apps/mobile/src/config/api.ts para o endereco que
-o celular consegue acessar.
-
-Para gerar o APK no Windows:
-
-```powershell
-cd apps/mobile/android
-.\gradlew.bat assembleDebug
-```
-
-O arquivo gerado fica em:
-
-```text
-apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
-```
+O fluxo principal do aplicativo sera enviado em video junto com a entrega.
+Para avaliar o projeto localmente, siga as instrucoes de banco, API e mobile
+descritas acima.
 
 ## Com mais tempo
 
-- Autenticacao com JWT em vez do header de usuario
-- Endpoint para carregar os check-ins de todos os habitos de uma vez
-- Testes de integracao da API e testes de interacao no mobile
+- Autenticacao com JWT, para que o usuario seja identificado pelo token.
+- Persistencia da sessao no celular, mantendo o usuario conectado depois de
+  fechar e abrir o aplicativo.
+- Endpoint para carregar os check-ins de todos os habitos de uma vez,
+  reduzindo as requisicoes feitas na abertura do dashboard.
+- Tela de carregamento enquanto os habitos e check-ins sao buscados pela API.
+- Possibilidade de filtrar o historico por mes e navegar entre meses no
+  detalhe do habito.
+- Lembretes locais para os horarios definidos pelo usuario.

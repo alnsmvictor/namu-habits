@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons/static';
 import { fontFamily, fontSize } from '../styles/typography';
 import { AuthUser, login, register } from '../services/auth';
 
@@ -24,6 +25,8 @@ function AuthScreen({ mode, onSuccess, onChangeMode }: AuthScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const isLogin = mode === 'login';
@@ -97,27 +100,61 @@ function AuthScreen({ mode, onSuccess, onChangeMode }: AuthScreenProps) {
           value={email}
           onChangeText={setEmail}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          placeholderTextColor="#8c9794"
-          autoCapitalize="none"
-          autoComplete={isLogin ? 'current-password' : 'new-password'}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-        {!isLogin && (
+        <View style={styles.passwordField}>
           <TextInput
-            style={styles.input}
-            placeholder="Confirmar senha"
+            style={[styles.input, styles.passwordInput]}
+            placeholder="Senha"
             placeholderTextColor="#8c9794"
             autoCapitalize="none"
-            autoComplete="new-password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            autoComplete={isLogin ? 'current-password' : 'new-password'}
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
           />
+          <Pressable
+            style={styles.eyeButton}
+            onPress={() => setShowPassword(!showPassword)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              showPassword ? 'Ocultar senha' : 'Mostrar senha'
+            }
+          >
+            <MaterialIcons
+              name={showPassword ? 'visibility-off' : 'visibility'}
+              size={22}
+              color="#60716d"
+            />
+          </Pressable>
+        </View>
+        {!isLogin && (
+          <View style={styles.passwordField}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="Confirmar senha"
+              placeholderTextColor="#8c9794"
+              autoCapitalize="none"
+              autoComplete="new-password"
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <Pressable
+              style={styles.eyeButton}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              accessibilityRole="button"
+              accessibilityLabel={
+                showConfirmPassword
+                  ? 'Ocultar confirmacao de senha'
+                  : 'Mostrar confirmacao de senha'
+              }
+            >
+              <MaterialIcons
+                name={showConfirmPassword ? 'visibility-off' : 'visibility'}
+                size={22}
+                color="#60716d"
+              />
+            </Pressable>
+          </View>
         )}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -169,6 +206,21 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.body,
     fontSize: fontSize.body,
     color: '#15211e',
+  },
+  passwordField: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 54,
+    height: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   error: {
     fontFamily: fontFamily.body,
