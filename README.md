@@ -14,7 +14,7 @@ Aplicacao mobile para criar habitos, registrar check-ins e acompanhar o progress
 ## Tecnologias
 
 - Backend: Node.js, TypeScript, NestJS e TypeORM
-- Banco de dados: MySQL executado com Docker Compose
+- Infraestrutura local: API e MySQL executados com Docker Compose
 - Mobile: React Native no bare workflow e React Navigation
 - Qualidade: ESLint, Prettier e Jest
 
@@ -50,7 +50,7 @@ Aplicacao mobile para criar habitos, registrar check-ins e acompanhar o progress
 - Docker Desktop
 - Android Studio com um emulador Android configurado
 
-## Banco de dados
+## Backend com Docker
 
 1. Crie o arquivo de ambiente a partir do exemplo:
 
@@ -58,11 +58,18 @@ Aplicacao mobile para criar habitos, registrar check-ins e acompanhar o progress
 Copy-Item .env.example .env
 ```
 
-2. Inicie o MySQL:
+2. Inicie o MySQL e a API:
 
 ```powershell
 docker compose up -d
 ```
+
+Esse comando sobe dois containers:
+
+- `namu_habits_db`: banco MySQL
+- `namu_habits_api`: API NestJS
+
+Com Docker, a API fica disponivel em `http://localhost:3001`.
 
 O schema esta centralizado em `seed.sql`. O Docker executa esse arquivo somente
 quando cria o volume `mysql_data` pela primeira vez.
@@ -77,6 +84,14 @@ docker compose up -d
 Esse comando remove todos os dados locais do banco.
 
 ## API
+
+Com Docker, nao e necessario rodar a API manualmente. Ela ja sobe com:
+
+```powershell
+docker compose up -d
+```
+
+Para desenvolvimento, tambem e possivel rodar a API fora do Docker:
 
 ```powershell
 cd apps/api
