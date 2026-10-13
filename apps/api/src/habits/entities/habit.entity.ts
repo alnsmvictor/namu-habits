@@ -30,7 +30,7 @@ export class Habit {
   @Column({ name: 'week_days', type: 'json' })
   weekDays: number[];
 
-  @Column({ type: 'enum', enum: ['diário', 'semanal', 'mensal'] })
+  @Column({ type: 'enum', enum: ['diário', 'semanal'] })
   frequency: string;
 
   @Column({

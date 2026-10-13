@@ -21,8 +21,7 @@ const categories = [
   { icon: 'self-improvement', value: 'mental' },
   { icon: 'water-drop', value: 'sa\u00fade' },
   { icon: 'fitness-center', value: 'exerc\u00edcio' },
-  { icon: 'menu-book', value: 'mental' },
-  { icon: 'directions-run', value: 'exerc\u00edcio' },
+  { icon: 'restaurant', value: 'alimenta\u00e7\u00e3o' },
 ] as const;
 const periods = [
   { key: 'MANHA', label: 'MANH\u00c3', icon: 'wb-sunny' },
@@ -57,7 +56,7 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
       title: title.trim(),
       description: description.trim() || undefined,
       period,
-      weekDays: days,
+      weekDays: [...days].sort((first, second) => first - second),
       frequency: days.length === weekDays.length ? 'di\u00e1rio' : 'semanal',
       category: categories[category].value,
     });

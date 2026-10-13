@@ -10,6 +10,13 @@ type HabitCardProps = {
   completed?: boolean;
 };
 
+const categoryIcons = {
+  mental: 'self-improvement',
+  saúde: 'water-drop',
+  exercício: 'fitness-center',
+  alimentação: 'restaurant',
+} as const;
+
 function HabitCard({
   habit,
   onPress,
@@ -19,7 +26,13 @@ function HabitCard({
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.iconBox}>
-        <MaterialIcons name="self-improvement" size={24} color="#08231c" />
+        <MaterialIcons
+          name={
+            categoryIcons[habit.category as keyof typeof categoryIcons] ?? 'spa'
+          }
+          size={24}
+          color="#08231c"
+        />
       </View>
       <View style={styles.info}>
         <Text style={styles.title}>{habit.title}</Text>
@@ -27,7 +40,9 @@ function HabitCard({
       </View>
       {showCheck && (
         <View style={[styles.check, completed && styles.checkDone]}>
-          {completed && <MaterialIcons name="check" size={22} color="#ffffff" />}
+          {completed && (
+            <MaterialIcons name="check" size={22} color="#ffffff" />
+          )}
         </View>
       )}
     </Pressable>

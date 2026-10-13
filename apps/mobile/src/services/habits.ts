@@ -91,11 +91,15 @@ export async function getCheckins(userId: number, habits: UserHabit[]) {
         { headers: { 'x-user-id': String(userId) } },
       );
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        return [];
+        throw new Error(
+          data.message || 'Não foi possível carregar os check-ins.',
+        );
       }
 
-      return response.json() as Promise<HabitCheckin[]>;
+      return data as HabitCheckin[];
     }),
   );
 

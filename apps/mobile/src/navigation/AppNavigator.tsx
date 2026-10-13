@@ -69,7 +69,7 @@ function AppNavigator() {
       .catch(error => Alert.alert('Erro', error.message));
   }, [user]);
 
-  async function refreshStreaks() {
+  async function refreshStreaks(currentHabits = habits) {
     if (!user) {
       return;
     }
@@ -77,7 +77,7 @@ function AppNavigator() {
     try {
       const dashboard = await getDashboard(user.id);
 
-      setHabits(currentHabits =>
+      setHabits(
         currentHabits.map(habit => {
           const dashboardHabit = dashboard.habits.find(
             item => item.id === habit.id,
@@ -124,13 +124,12 @@ function AppNavigator() {
 
     try {
       const updatedHabit = await updateHabit(user.id, habitId, habitData);
-      setHabits(currentHabits =>
-        currentHabits.map(habit =>
-          habit.id === habitId
-            ? { ...updatedHabit, currentStreak: habit.currentStreak }
-            : habit,
-        ),
+      const updatedHabits = habits.map(habit =>
+        habit.id === habitId
+          ? { ...updatedHabit, currentStreak: habit.currentStreak }
+          : habit,
       );
+      await refreshStreaks(updatedHabits);
       return true;
     } catch (error) {
       const message =

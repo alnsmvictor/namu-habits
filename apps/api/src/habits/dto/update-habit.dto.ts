@@ -1,6 +1,7 @@
 import {
   ArrayMaxSize,
   ArrayMinSize,
+  ArrayUnique,
   IsArray,
   IsIn,
   IsInt,
@@ -29,6 +30,7 @@ export class UpdateHabitDto {
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(7)
+  @ArrayUnique()
   @IsInt({ each: true })
   @Min(0, { each: true })
   @Max(6, { each: true })
