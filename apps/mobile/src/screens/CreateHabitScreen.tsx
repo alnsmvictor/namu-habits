@@ -99,6 +99,9 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
             style={styles.input}
             placeholder="Ex.: Meditar 10 minutos"
             placeholderTextColor="#a1aaa8"
+            inputMode="text"
+            autoCapitalize="sentences"
+            autoCorrect
             value={title}
             onChangeText={setTitle}
           />
@@ -108,6 +111,9 @@ function CreateHabitScreen({ onBack, onCreateHabit }: Props) {
           style={styles.descriptionInput}
           placeholder="Ex.: Fazer por 10 minutos ao acordar"
           placeholderTextColor="#a1aaa8"
+          inputMode="text"
+          autoCapitalize="sentences"
+          autoCorrect
           value={description}
           onChangeText={setDescription}
           multiline

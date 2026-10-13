@@ -86,6 +86,9 @@ function AuthScreen({ mode, onSuccess, onChangeMode }: AuthScreenProps) {
             style={styles.input}
             placeholder="Seu nome"
             placeholderTextColor="#8c9794"
+            inputMode="text"
+            autoCapitalize="words"
+            autoCorrect
             value={name}
             onChangeText={setName}
           />

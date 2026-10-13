@@ -157,12 +157,18 @@ function HabitDetailsScreen(props: Props) {
           <Text style={styles.label}>NOME DO HÁBITO</Text>
           <TextInput
             style={styles.input}
+            inputMode="text"
+            autoCapitalize="sentences"
+            autoCorrect
             value={title}
             onChangeText={setTitle}
           />
           <Text style={styles.label}>DESCRIÇÃO</Text>
           <TextInput
             style={styles.descriptionInput}
+            inputMode="text"
+            autoCapitalize="sentences"
+            autoCorrect
             value={description}
             onChangeText={setDescription}
             multiline
