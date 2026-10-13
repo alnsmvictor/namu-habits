@@ -109,7 +109,9 @@ npm test
 
 ## Demonstracao
 
-O fluxo principal do aplicativo sera enviado em video junto com a entrega.
+O fluxo principal do aplicativo pode ser visto neste
+[video de demonstracao](https://drive.google.com/file/d/1jhGKct0Zh1nzIqvTXxxMtRqhCbfQLobB/view?usp=sharing).
+
 Para avaliar o projeto localmente, siga as instrucoes de banco, API e mobile
 descritas acima.
 
