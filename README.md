@@ -97,7 +97,7 @@ esse endereco.
 
 ## Testes e qualidade
 
-~~~powershell
+```powershell
 cd apps/api
 npm test
 npm run build
@@ -105,7 +105,7 @@ npm run build
 cd ../mobile
 npm run lint
 npm test
-~~~
+```
 
 ## APK de debug
 
@@ -116,19 +116,16 @@ o celular consegue acessar.
 
 Para gerar o APK no Windows:
 
-~~~powershell
+```powershell
 cd apps/mobile/android
 .\gradlew.bat assembleDebug
-~~~
+```
 
 O arquivo gerado fica em:
 
-~~~text
+```text
 apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
-~~~
-
-Publique esse arquivo em um GitHub Release ou Google Drive e adicione o link
-nesta secao antes de enviar o repositorio para avaliacao.
+```
 
 ## Com mais tempo
 
