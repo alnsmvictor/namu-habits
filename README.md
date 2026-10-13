@@ -18,6 +18,21 @@ Aplicacao mobile para criar habitos, registrar check-ins e acompanhar o progress
 - Mobile: React Native no bare workflow e React Navigation
 - Qualidade: ESLint, Prettier e Jest
 
+## Requisitos tecnicos atendidos
+
+- API REST criada com Node.js, TypeScript, NestJS e MySQL.
+- TypeORM utilizado para mapear as entidades e acessar o banco de dados.
+- Aplicativo mobile criado em React Native bare workflow, sem Expo managed.
+- Navegacao entre autenticacao, dashboard, lista, criacao e detalhe feita com
+  React Navigation.
+- Comunicacao entre app e backend feita por requisicoes HTTP para a API REST.
+- Validacoes no mobile para campos obrigatorios e no backend por DTOs com
+  class-validator.
+- ESLint e Prettier configurados no projeto mobile.
+- Testes unitarios com Jest configurados no backend e no mobile.
+- Interface mobile organizada para criar, editar, excluir e acompanhar habitos.
+- Projeto organizado como monorepo, com `apps/api` e `apps/mobile`.
+
 ## Decisoes tecnicas
 
 - O backend usa validacao global do NestJS e DTOs para validar os dados
