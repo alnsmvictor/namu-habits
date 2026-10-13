@@ -27,7 +27,15 @@ export class HabitsService {
   }
 
   async create(dto: CreateHabitDto, userId: number): Promise<Habit> {
-    const habit = this.habitsRepository.create({ ...dto, userId });
+    const habit = this.habitsRepository.create({
+      title: dto.title,
+      description: dto.description,
+      period: dto.period,
+      weekDays: dto.weekDays,
+      frequency: dto.frequency,
+      category: dto.category,
+      userId,
+    });
     return this.habitsRepository.save(habit);
   }
 

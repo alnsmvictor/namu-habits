@@ -96,4 +96,25 @@ describe('AuthService', () => {
       service.login({ email: 'victor@email.com', password: '123456' }),
     ).rejects.toThrow(/senha/);
   });
+
+  it('deve alterar a senha quando a senha atual estiver correta', async () => {
+    const passwordHash = await bcrypt.hash('123456', 10);
+    const user = {
+      id: 1,
+      name: 'Victor',
+      email: 'victor@email.com',
+      passwordHash,
+    };
+
+    repositoryMock.findOneBy.mockResolvedValue(user);
+    repositoryMock.save.mockResolvedValue(user);
+
+    const result = await service.changePassword(1, {
+      currentPassword: '123456',
+      newPassword: '654321',
+    });
+
+    expect(result).toEqual({ message: 'Senha alterada com sucesso' });
+    expect(await bcrypt.compare('654321', user.passwordHash)).toBe(true);
+  });
 });

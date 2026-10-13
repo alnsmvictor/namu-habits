@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -52,6 +53,22 @@ export class AuthService {
       message: 'Login realizado com sucesso',
       user: this.getPublicUser(user),
     };
+  }
+
+  async changePassword(userId: number, dto: ChangePasswordDto) {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+
+    if (
+      !user ||
+      !(await bcrypt.compare(dto.currentPassword, user.passwordHash))
+    ) {
+      throw new UnauthorizedException('Senha atual inv\u00e1lida');
+    }
+
+    user.passwordHash = await bcrypt.hash(dto.newPassword, 10);
+    await this.usersRepository.save(user);
+
+    return { message: 'Senha alterada com sucesso' };
   }
 
   private getPublicUser(user: User) {

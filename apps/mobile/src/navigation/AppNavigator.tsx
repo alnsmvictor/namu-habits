@@ -3,11 +3,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import AuthScreen from '../screens/AuthScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import CreateHabitScreen from '../screens/CreateHabitScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import HabitDetailsScreen from '../screens/HabitDetailsScreen';
 import HabitsScreen from '../screens/HabitsScreen';
-import { AuthUser } from '../services/auth';
+import { AuthUser, changePassword } from '../services/auth';
 import {
   createHabit,
   createCheckin,
@@ -198,6 +199,27 @@ function AppNavigator() {
     }
   }
 
+  async function updatePassword(currentPassword: string, newPassword: string) {
+    if (!user) {
+      return false;
+    }
+
+    try {
+      const response = await changePassword(
+        user.id,
+        currentPassword,
+        newPassword,
+      );
+      Alert.alert('Sucesso', response.message);
+      return true;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Tente novamente.';
+      Alert.alert('Erro', message);
+      return false;
+    }
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -231,6 +253,7 @@ function AppNavigator() {
                   habits={habits}
                   userName={user.name}
                   onLogout={() => setUser(null)}
+                  onOpenProfile={() => navigation.navigate('ChangePassword')}
                   onCreateHabit={() => navigation.navigate('CreateHabit')}
                   onOpenHabits={() => navigation.navigate('Habits')}
                   checkins={checkins}
@@ -299,6 +322,21 @@ function AppNavigator() {
                 <CreateHabitScreen
                   onBack={() => navigation.goBack()}
                   onCreateHabit={saveHabit}
+                />
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen
+              name="ChangePassword"
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }}
+            >
+              {({ navigation }) => (
+                <ChangePasswordScreen
+                  onBack={() => navigation.goBack()}
+                  onChangePassword={updatePassword}
                 />
               )}
             </Stack.Screen>

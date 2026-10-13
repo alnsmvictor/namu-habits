@@ -39,3 +39,29 @@ export function login(email: string, password: string) {
 export function register(name: string, email: string, password: string) {
   return request('/auth/register', { name, email, password });
 }
+
+export async function changePassword(
+  userId: number,
+  currentPassword: string,
+  newPassword: string,
+) {
+  const response = await fetch(API_URL + '/auth/password', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': String(userId),
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = Array.isArray(data.message)
+      ? data.message[0]
+      : data.message;
+    throw new Error(message || 'N\u00e3o foi poss\u00edvel alterar a senha');
+  }
+
+  return data as { message: string };
+}

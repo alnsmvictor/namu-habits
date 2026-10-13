@@ -17,6 +17,7 @@ type DashboardScreenProps = {
   habits: UserHabit[];
   userName: string;
   onLogout: () => void;
+  onOpenProfile: () => void;
   onCreateHabit: () => void;
   onOpenHabits: () => void;
   checkins: HabitCheckin[];
@@ -66,6 +67,7 @@ function DashboardScreen({
   habits,
   userName,
   onLogout,
+  onOpenProfile,
   onCreateHabit,
   onOpenHabits,
   checkins,
@@ -113,9 +115,9 @@ function DashboardScreen({
           source={require('../assets/namu-logo.png')}
           style={styles.logo}
         />
-        <View style={styles.profileButton}>
+        <Pressable style={styles.profileButton} onPress={onOpenProfile}>
           <MaterialIcons name="person-outline" size={25} color="#ffffff" />
-        </View>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -245,11 +247,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eef2f1',
     shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    shadowOpacity: 0.12,
+    shadowRadius: 9,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
   logoutButton: {
     position: 'absolute',

@@ -52,7 +52,8 @@ export class CheckinsService {
 
     const checkin = this.checkinsRepository.create({
       habitId,
-      ...dto,
+      date: dto.date,
+      notes: dto.notes,
     });
 
     return this.checkinsRepository.save(checkin);
