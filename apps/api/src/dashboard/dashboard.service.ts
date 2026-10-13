@@ -52,7 +52,7 @@ export class DashboardService {
 
       return (
         total +
-        weekDates.filter(date => this.isHabitDay(date, weekDays)).length
+        weekDates.filter((date) => this.isHabitDay(date, weekDays)).length
       );
     }, 0);
     const completedCheckins = habits.reduce((total, habit) => {

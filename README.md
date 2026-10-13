@@ -106,9 +106,25 @@ npm run android
 Para o emulador Android, a API esta configurada em
 `apps/mobile/src/config/api.ts` com o host `10.0.2.2`.
 
-Para testar em um celular fisico conectado na mesma rede Wi-Fi, substitua
-`API_HOST` pelo IPv4 do computador. Use `ipconfig` no PowerShell para encontrar
-esse endereco.
+Para testar em um celular fisico conectado por USB, ajuste
+`apps/mobile/src/config/api.ts`: troque o `API_HOST` para `localhost` e mantenha
+a porta local da API, por exemplo `3001`.
+
+Exemplo:
+
+```ts
+const API_HOST = 'localhost';
+const API_PORT = '3001';
+```
+
+Antes de abrir o app no aparelho, rode o redirecionamento da porta pelo ADB:
+
+```powershell
+adb reverse tcp:3001 tcp:3001
+```
+
+Assim, as chamadas para `localhost:3001` feitas pelo app no celular sao
+redirecionadas para a API rodando no computador.
 
 ## Testes e qualidade
 

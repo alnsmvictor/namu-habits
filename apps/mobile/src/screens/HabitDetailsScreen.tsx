@@ -51,6 +51,28 @@ function getWeekDayIndex(date: string) {
   return day === 0 ? 6 : day - 1;
 }
 
+function getStreakUntil(dateList: string[], weekDays: number[], date: string) {
+  const completedDates = new Set(dateList);
+  const currentDate = new Date(`${date}T12:00:00`);
+  let streak = 0;
+
+  for (let index = 0; index < 365; index += 1) {
+    const currentDateKey = dateKey(currentDate);
+
+    if (weekDays.includes(getWeekDayIndex(currentDateKey))) {
+      if (!completedDates.has(currentDateKey)) {
+        return streak;
+      }
+
+      streak += 1;
+    }
+
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+
+  return streak;
+}
+
 function HabitDetailsScreen(props: Props) {
   const {
     habit,
@@ -97,6 +119,11 @@ function HabitDetailsScreen(props: Props) {
   const completed = checkinDates.includes(selectedDate);
   const isHabitDay = habit.weekDays.includes(getWeekDayIndex(selectedDate));
   const canToggleHabit = isHabitDay || completed;
+  const currentStreak = getStreakUntil(
+    checkinDates,
+    habit.weekDays,
+    selectedDate,
+  );
   const schedule = habit.weekDays.map(day => weekDayLabels[day]).join(', ');
   const daysInMonth = new Date(
     today.getFullYear(),
@@ -322,10 +349,7 @@ function HabitDetailsScreen(props: Props) {
         <View style={styles.stats}>
           <Stat value={String(checkins.length)} label="Total de sessões" />
           <Stat value={successRate + '%'} label="Taxa de êxito" />
-          <Stat
-            value={String(habit.currentStreak ?? 0)}
-            label="Dias seguidos"
-          />
+          <Stat value={String(currentStreak)} label="Dias seguidos" />
         </View>
         <Section title="HISTÓRICO MENSAL" detail="Mês atual" />
         <View style={styles.card}>
